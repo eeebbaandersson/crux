@@ -11,6 +11,11 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true}));
 
+// Import routes and define base-url 
+const problemRoutes = require('./routes/problemRoutes');
+app.use('/api/problems', problemRoutes);
+
+
 // Call to verify database connection using minimal SQL-query
 app.get('/api/health', async (req, res) => {
     try {

@@ -45,7 +45,7 @@ module.exports = {
     getAllProblems,
     getProblemById,
     logNewProblem,
-    updatedCurrentProblem,
+    updateProblem,
     deleteProblem
 };
 
