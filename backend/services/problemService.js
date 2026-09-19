@@ -24,7 +24,7 @@ async function logNewProblem(problemData) {
 }
 
 
-async function updatedCurrentProblem(id, problemData) {
+async function updateProblem(id, problemData) {
     const { style, grade, tries, current_status, gym, climb_date, notes } = problemData;
 
     const [result] = await db.query('UPDATE problems SET style = ?, grade = ?, tries = ?, current_status = ?, gym = ?, climb_date = ?, notes = ? WHERE id = ?',
