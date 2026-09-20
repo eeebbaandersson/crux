@@ -19,7 +19,7 @@ app.use('/api/problems', problemRoutes);
 // Call to verify database connection using minimal SQL-query
 app.get('/api/health', async (req, res) => {
     try {
-        const [rows] = await db.query('SELECT 1 + 1 AS result');
+        const { rows } = await db.query('SELECT 1 + 1 AS result');
         res.json({ status: 'ok', database: 'connected', result: rows[0].result });
     } catch (error) {
         res.status(500).json({ status: 'error', message: error.message });

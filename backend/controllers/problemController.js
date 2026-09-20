@@ -38,9 +38,13 @@ exports.updateProblem = async (req, res) => {
     try {
         const { id } = req.params;
         const problemData = req.body;
-        const result = await problemService.updateProblem(id, problemData);
+        const updateProblem = await problemService.updateProblem(id, problemData);
 
-        return res.json({ message: 'Problem has been updated.', result });
+        if (!updateProblem) {
+            return res.status(404).json({ message: 'Problem not found.'});
+        } 
+
+        return res.json({ message: 'Problem has been updated.', result: updateProblem });
     } catch(error) {
         return res.status(500).json({ error: error.message });
     }
@@ -49,7 +53,11 @@ exports.updateProblem = async (req, res) => {
 exports.deleteProblem = async (req, res) => {
     try {
         const { id } = req.params;
-        await problemService.deleteProblem(id);
+        const isDeleted = await problemService.deleteProblem(id);
+
+        if (!isDeleted) {
+            return res.status(404).json({ message: 'Problem not found.'});
+        }
 
         return res.json({ message: 'Problem has been deleted.'});
     } catch(error) {

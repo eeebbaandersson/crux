@@ -1,12 +1,10 @@
-CREATE DATABASE IF NOT EXISTS problem_db;
-USE problem_db;
 
 DROP TABLE IF EXISTS problems;
 DROP TABLE IF EXISTS users;
 
 -- Future table for users --
-CREATE TABLE users (
-    id INT AUTO_INCREMENT PRIMARY KEY,
+CREATE TABLE IF NOT EXISTS users (
+    id SERIAL PRIMARY KEY,
     username VARCHAR(255) NOT NULL UNIQUE,
     email VARCHAR(255) NOT NULL UNIQUE,
     password_hash VARCHAR(255) NOT NULL,
@@ -14,8 +12,8 @@ CREATE TABLE users (
 );
 
 -- Bouldering problems --
-CREATE TABLE problems (
-    id INT AUTO_INCREMENT PRIMARY KEY,
+CREATE TABLE IF NOT EXISTS problems (
+    id SERIAL PRIMARY KEY,
     user_id INT NULL,
     style VARCHAR(50) NOT NULL,
     grade VARCHAR(20) NOT NULL,
@@ -25,7 +23,7 @@ CREATE TABLE problems (
     climb_date DATE NOT NULL,
     notes TEXT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
 
@@ -43,7 +41,7 @@ VALUES (
     3,
     'Send',
     'Klättercentret',
-    CURRENT_DATE(),
+    CURRENT_DATE,
     'Tricky start, but with an easy finish.'
 );
 
