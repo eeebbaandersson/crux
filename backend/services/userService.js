@@ -22,8 +22,8 @@ async function getUserByUsername(username) {
     return rows[0]; 
 }
 
-async function verifyPassword(plainPassword, storedHash) {
-    return await bcrypt.compare(plainPassword, storedHash);
+async function verifyPassword(password, storedHash) {
+    return await bcrypt.compare(password, storedHash);
 }
 
 async function getUserById(id) {

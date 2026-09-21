@@ -15,6 +15,9 @@ app.use(express.urlencoded({ extended: true}));
 const problemRoutes = require('./routes/problemRoutes');
 app.use('/api/problems', problemRoutes);
 
+const authRoutes = require('./routes/authRoutes');
+app.use('/api/auth', authRoutes);
+
 
 // Call to verify database connection using minimal SQL-query
 app.get('/api/health', async (req, res) => {
