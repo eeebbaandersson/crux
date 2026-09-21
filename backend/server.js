@@ -18,6 +18,9 @@ app.use('/api/problems', problemRoutes);
 const authRoutes = require('./routes/authRoutes');
 app.use('/api/auth', authRoutes);
 
+const userRoutes = require('./routes/userRoutes');
+app.use('/api/users', userRoutes);
+
 
 // Call to verify database connection using minimal SQL-query
 app.get('/api/health', async (req, res) => {

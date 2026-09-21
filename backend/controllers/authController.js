@@ -20,7 +20,7 @@ exports.register = async (req, res) => {
         return res.status(201).json(newUser);
     } catch (error) {
         console.error('Error during registration.', error);
-        return res.status(500).json({ error: 'An server error occurred during registration.'});
+        return res.status(500).json({ error: 'A server error occurred during registration.'});
     }
 }
 
@@ -53,6 +53,6 @@ exports.login = async (req, res) => {
         });
     } catch (error) {
         console.error('Error during login:', error);
-        return res.status(500).json({ error: 'An server error occurred during login '})
+        return res.status(500).json({ error: 'A server error occurred during login '})
     }
 }
