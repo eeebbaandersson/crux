@@ -11,15 +11,16 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true}));
 
-// Import routes and define base-url 
-const problemRoutes = require('./routes/problemRoutes');
-app.use('/api/problems', problemRoutes);
 
+// Routes
 const authRoutes = require('./routes/authRoutes');
 app.use('/api/auth', authRoutes);
 
 const userRoutes = require('./routes/userRoutes');
 app.use('/api/users', userRoutes);
+
+const problemRoutes = require('./routes/problemRoutes');
+app.use('/api/users/:userId/problems', problemRoutes);
 
 
 // Call to verify database connection using minimal SQL-query
