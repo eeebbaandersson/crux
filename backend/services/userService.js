@@ -22,6 +22,13 @@ async function getUserByUsername(username) {
     return rows[0]; 
 }
 
+async function getUserByEmail(email) {
+    const { rows } = await db.query('SELECT * FROM users WHERE email = $1',
+        [email]
+    );
+    return rows[0];
+}
+
 async function verifyPassword(password, storedHash) {
     return await bcrypt.compare(password, storedHash);
 }
@@ -72,6 +79,7 @@ module.exports = {
     getUserById,
     verifyPassword,
     getUserByUsername,
+    getUserByEmail,
     updateUserInfo,
     deleteUser
 };

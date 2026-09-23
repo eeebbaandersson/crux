@@ -3,6 +3,16 @@
         createApp({
             data() {
                 return {
+                    //Auth state
+                    isLoggedIn: false,
+                    isRegister: false,
+                    authError: '',
+                    authForm: {
+                        username: '',
+                        email: '',
+                        password: '',
+                    },
+                    
                     selectedStatus: '',
                     selectedGrade: '',
                     selectedStyle: '',
@@ -11,6 +21,7 @@
                     isEditingProfile: false,
 
                     user: {
+                        id: null,
                         name: '',
                         favoriteStyle: '',
                         saveData: true
@@ -26,38 +37,11 @@
                         notes: ''
                     },
 
-                    problems: [
-                        {
-                            id: 1,
-                            style: 'slab',
-                            grade: '6B',
-                            tries: 1,
-                            status: 'Send',
-                            gym: 'Backa Boulder',
-                            date: '2026-09-01',
-                            notes: 'Solved it on the first atempt!'
-                        },
-                        {
-                            id: 2,
-                            style: 'overhang',
-                            grade: '6A',
-                            tries: 3,
-                            status: 'Project',
-                            gym: 'Backa Boulder',
-                            date: '2026-09-01',
-                            notes: 'Still working on this one...'
-                        }   
-                    ]
+                    problems: []
                 }
             },
-            async created() {
-                const savedUser = localStorage.getItem('bouldering_user');
-                if (savedUser) {
-                    this.user = JSON.parse(savedUser);
-                }
-
-                await this.fetchProblems();
-
+            mounted() {
+                this.checkSavedSession();
             },
             computed: {
                 totalSends() {
@@ -112,12 +96,125 @@
                 }
             },
             methods: {
-                async fetchProblems() {
+                getStorageKey() {
+                    return this.user.id ? `crux_problems_${this.user.id}` : 'crux_demo_problems';
+
+                },
+                loginAsGuest() {
+                    this.authError = '';
+
+                    this.isLoggedIn = true;
+                    this.user = {
+                        id: null, // because of null all API-calls will be skipped
+                        name: 'Demo Climber',
+                        favoriteStyle: '',
+                        saveData: true
+                    };
+
+                    // Load current problems from localStorage if there is any, otherwise show demo data
+                    const savedProblems = localStorage.getItem('crux_demo_problems');
+                    if (savedProblems) {
+                        this.problems = JSON.parse(savedProblems);
+                    } else {
+                        this.problems = [
+                            { id: 101, gym: 'Backa Boulder', grade: '6A', status: 'Send', style: 'Slab', tries: 1, date: '2026-09-22', notes: 'Demo climb' }
+                        ];  
+                    }
+
+                    if (this.user.saveData) {
+                        localStorage.setItem('crux_user', JSON.stringify(this.user));
+                        localStorage.setItem('crux_demo_problems', JSON.stringify(this.problems));
+                    }
+                },
+                checkSavedSession() {
+                    const savedUser = localStorage.getItem('crux_user');
+                  
+                    if (savedUser) {
+                        const parsedUser = JSON.parse(savedUser);
+                        this.user = { ...this.user, ...parsedUser };
+                        this.isLoggedIn = true;
+
+                        const storageKey = parsedUser.id ? `crux_problems_${parsedUser.id}` : 'crux_demo_problems';
+                        const savedProblems = localStorage.getItem(storageKey);
+
+                        // If there is saved problems, fetch them
+                        if (savedProblems) {
+                            this.problems = JSON.parse(savedProblems);
+                    }
+
+                    // Sync/fetch the newest problems from backend if the user has an ID
+                    if (this.user.id) {
+                        this.fetchUserProblems(this.user.id);
+                    }
+                }
+            },
+                toggleAuthMode() {
+                    this.isRegister = !this.isRegister;
+                    this.authError = '',
+                    this.authForm = { username: '', email: '', password: ''};
+                },
+                async handleAuth() {
+                    this.authError = '';
+                    const endpoint = this.isRegister ? '/api/auth/register' : '/api/auth/login';
+
                     try {
-                        const response = await fetch('http://localhost:3000/api/problems');
+                        const response = await fetch (`http://localhost:3000${endpoint}`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json'},
+                            body: JSON.stringify(this.authForm)
+                        });
+
+                        const data = await response.json();
+
+                        if (!response.ok) {
+                            throw new Error(data.message || data.error || 'Authentication failed.');
+                        }
+
+                       // Fetch User object
+                        const userObj = data.user || data;
+
+                        // Update Vue state
+                        this.isLoggedIn = true;
+
+                        this.user.id = userObj.id || null;
+                        this.user.name = userObj.username || this.authForm.username || 'Climber';
+
+                        // localStorage fallback
+                        if (this.user.saveData) {
+                            localStorage.setItem('crux_user', JSON.stringify({
+                                id: this.user.id,
+                                name: this.user.name,
+                                email: userObj.email || this.authForm.email,
+                                favoriteStyle: this.user.favoriteStyle,
+                                saveData: true
+                            }));
+                        }
+
+                        // Fetch problems from backend if ID is present
+                        if (this.user.id) {
+                            await this.fetchUserProblems(this.user.id);
+                        }
+
+                        // clear authform
+                        this.authForm = { username: '', email: '', password: '' };
+
+                    } catch (error) {
+                        if (error.message === 'Failed to fetch') {
+                            this.authError = 'Could not connect to backend server. Check if your API is running.';
+                        } else {
+                            this.authError = error.message;
+                        }
+                    }
+                },
+                async fetchUserProblems(userId) {
+                    if (!userId) return;
+
+                    try {
+                        const response = await fetch(`http://localhost:3000/api/users/${userId}/problems`);
                         if (!response.ok) throw new Error('Backed server unavailable');
 
                         const data = await response.json();
+
                         this.problems = data.map(p => ({
                             id: p.id,
                             style: p.style,
@@ -128,12 +225,18 @@
                             date: p.climb_date ? p.climb_date.split('T')[0] : '',
                             notes: p.notes
                         }));
+
+                        // Save in localStorage if it´s choosen by the user
+                        if (this.user.saveData) {
+                            localStorage.setItem(`crux_problems_${userId}`, JSON.stringify(this.problems));
+                        }
+
                     } catch (error) {
                         console.warn('Backend is unavailable. Using localStorage as fallback:', error.message);
 
-                        // localStorage fallback
+                        // localStorage fallback when backend is missing
                         if (this.user.saveData) {
-                            const savedProblems = localStorage.getItem('bouldering_problems');
+                            const savedProblems = localStorage.getItem(`crux_problems_${userId}`);
                             if (savedProblems) {
                                 this.problems = JSON.parse(savedProblems);
                             }
@@ -166,37 +269,39 @@
                         await this.logNewProblem();
                     }
 
-                    if (this.user.saveData) {
-                        localStorage.setItem('bouldering_problems', JSON.stringify(this.problems));
-                    }
+                    this.saveProfile();
                     this.resetForm();
                 },
                  async logNewProblem() {
+                    const userId = this.user.id || null;
+                
                     const payload = {
-                        user_id: 1,
-                        style: this.newProblem.style,
-                        grade: this.newProblem.grade,
-                        tries: this.newProblem.tries,
-                        current_status: this.newProblem.status,
-                        gym: this.newProblem.gym,
+                        user_id: userId,
+                        style: this.newProblem.style || null,
+                        grade: this.newProblem.grade || null,
+                        tries: Number(this.newProblem.tries) || 1,
+                        current_status: this.newProblem.status || 'Send',
+                        gym: this.newProblem.gym || null,
                         climb_date: this.newProblem.date,
-                        notes: this.newProblem.notes
+                        notes: this.newProblem.notes || null
                     };
 
-                   try {
-                    const response = await fetch('http://localhost:3000/api/problems', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
-                    });
+                  if (userId) {
+                    try {
+                        const response = await fetch(`http://localhost:3000/api/users/${userId}/problems`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json'},
+                            body: JSON.stringify(payload)
+                        });
 
-                    if (response.ok) {
-                        await this.fetchProblems();
-                        return; 
+                        if (response.ok) {
+                            await this.fetchUserProblems(userId);
+                            return;
+                        }
+                    } catch (error) {
+                        console.warn('POST failed. Saving locally in UI/localStorage.');
                     }
-                } catch (error) {
-                    console.warn('POST failed. Saving locally in UI/localStorage.');
-                }
+                  }
 
                 // fallback when backend is missing
                      this.problems.push({
@@ -211,31 +316,36 @@
                     });   
              },
                  async updateCurrentProblem(id) {
+                    const userId = this.user.id || null;
+                    const isLocalOnlyId = typeof id === 'number' && id > 1000000000000;
+
                     const payload = {
-                            user_id: 1,
-                            style: this.newProblem.style,
-                            grade: this.newProblem.grade,
-                            tries: Number(this.newProblem.tries),
-                            current_status: this.newProblem.status,
-                            gym: this.newProblem.gym,
+                            user_id: userId,
+                            style: this.newProblem.style || null,
+                            grade: this.newProblem.grade || null,
+                            tries: Number(this.newProblem.tries) || 1,
+                            current_status: this.newProblem.status || 'Send',
+                            gym: this.newProblem.gym || null,
                             climb_date: this.newProblem.date,
-                            notes: this.newProblem.notes
+                            notes: this.newProblem.notes || null
                         };
 
-                    try {
-                        const respone = await fetch(`http://localhost:3000/api/problems/${id}`, {
-                            method: 'PUT',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify(payload)
-                        });
+                        if (userId && !isLocalOnlyId) {
+                            try {
+                                const response = await fetch(`http://localhost:3000/api/users/${userId}/problems/${id}`, {
+                                    method: 'PUT',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify(payload)
+                                });
 
-                        if (respone.ok) {
-                            await this.fetchProblems();
-                            return;  
+                                if (response.ok) {
+                                    await this.fetchUserProblems(userId);
+                                    return;
+                                }
+                            } catch (error) {
+                                console.warn('PUT failed. Updating locally in UI/localStorage.');
+                            }
                         }
-                    } catch (error) {
-                        console.warn('PUT failed. Updating locally in UI/localStorage.');
-                    }
 
                     // fallback when backend is missing
                     const index = this.problems.findIndex(p => p.id === id);
@@ -262,10 +372,7 @@
 
                     await this.updateCurrentProblem(this.editingId);
 
-                    if (this.user.saveData) {
-                        localStorage.setItem('bouldering_problems', JSON.stringify(this.problems));
-                    }
-
+                    this.saveProfile();
                     this.resetForm();
                 },
                 async deleteProblem(id) {
@@ -273,23 +380,28 @@
                         this.resetForm();
                     }
 
+                    const userId = this.user.id || null;
+                    const isLocalOnlyId = typeof id === 'number' && id > 1000000000000;
+
+                   if (userId && !isLocalOnlyId) {
                     try {
-                        const response = await fetch(`http://localhost:3000/api/problems/${id}`, {
+                        const response = await fetch(`http://localhost:3000/api/users/${userId}/problems/${id}`, {
                             method: 'DELETE'
                         });
 
                         if (response.ok) {
-                            await this.fetchProblems();
+                            await this.fetchUserProblems(userId);
                             return;
                         }
                     } catch (error) {
                         console.warn('DELETE failed. Removing locally from UI/localStorage.');
-                    } 
+                    }
+                   }
 
                     // fallback when backend is missing
                     this.problems = this.problems.filter(p => p.id !== id);
                     if (this.user.saveData) {
-                        localStorage.setItem('bouldering_problems', JSON.stringify(this.problems));
+                        localStorage.setItem(this.getStorageKey(), JSON.stringify(this.problems));
                     }
                 },
                 updateProfile() {
@@ -298,18 +410,31 @@
                 },
                 saveProfile() {
                     if (this.user.saveData) {
-                        localStorage.setItem('bouldering_user', JSON.stringify(this.user));
-                        localStorage.setItem('bouldering_problems', JSON.stringify(this.problems));
+                        localStorage.setItem('crux_user', JSON.stringify(this.user));
+                        localStorage.setItem(this.getStorageKey(), JSON.stringify(this.problems));
                     }
                 },
                 handleStorage() {
                     if (!this.user.saveData) {
                         // Om användaren slår av lokal sparning, rensa data från localStorage
-                        localStorage.removeItem('bouldering_user');
-                        localStorage.removeItem('bouldering_problems');
+                        localStorage.removeItem('crux_user');
+                        localStorage.removeItem(this.getStorageKey());
                     } else {
                         this.saveProfile();
                     }
+                },
+                logout() {
+                    this.isLoggedIn = false;
+                    this.problems = [];
+                    this.user = {
+                        id: null,
+                        name: '',
+                        favoriteStyle: '',
+                        saveData: true
+                    };
+
+                    localStorage.removeItem('crux_user');
+                   
                 }
             }
         }).mount('#app')

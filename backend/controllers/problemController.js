@@ -15,9 +15,20 @@ exports.createProblem = async (req, res) => {
     try {
         // req.body --> Innehåller objektet med alla nödvändiga fält
         const { userId } = req.params;
+        const { style, grade, gym, climb_date } = req.body;
+
+        if (!style?.trim() || !grade?.trim() || !gym?.trim() || !climb_date) {
+            return res.status(400).json({
+                 error: 'Fields "style", "grade", "gym" and "climb_date" need to be filled in.'
+            });  
+        }
         const newProblem = await problemService.logNewProblem(userId, req.body);
         return res.status(201).json(newProblem);
     } catch(error) {
+        // I user in the URL is not found in database (Foreign Key violation)
+        if (error.code === '23503') {
+            return res.status(404).json({ error: 'User not found.'});
+        }
         return res.status(500).json({ error: error.message });
     }
 };
@@ -40,6 +51,13 @@ exports.updateProblem = async (req, res) => {
     try {
         const { userId, id } = req.params;
         const problemData = req.body;
+        const { style, grade, gym, climb_date } = problemData;
+
+        if (!style?.trim() || !grade?.trim() || !gym?.trim() || !climb_date) {
+            return res.status(400).json({
+                error: 'Fields "style", "grade", "gym" and "climb_date" cannot be empty.'
+            });
+        }
         const updateProblem = await problemService.updateProblem(id, userId, problemData);
 
         if (!updateProblem) {
