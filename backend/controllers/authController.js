@@ -16,6 +16,11 @@ exports.register = async (req, res) => {
             return res.status(400).json({ error: 'Username is already taken.'});
         }
 
+        const existingEmail = await userService.getUserByEmail(email);
+        if (existingEmail) {
+            return res.status(400).json({ error: 'Email is already registered.'});
+        }
+
         const newUser = await userService.createUser(username, email, password);
         return res.status(201).json(newUser);
     } catch (error) {

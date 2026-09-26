@@ -1,0 +1,154 @@
+:root {
+    --bg-main: #121315;
+    --text-primary: #e4e5e7;
+    --accent-color: #4ade80;
+    --border-color-card: rgba(255, 255, 255, 0.06);
+    --border-line-color: rgba(255, 255, 255, 0.08);
+    --border-radius-card: 12px;
+    --font-main: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+
+.autForm-container {
+    padding: 60px 80px; 
+    max-width: 500px;
+    margin: 0 auto;
+    background-color: transparent;
+    border: 1px solid var(--border-color-card);
+    border-radius: var(--border-radius-card);
+    display: flex;
+    flex-direction: column;
+}
+
+
+.authTitle {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 2.5rem; 
+    letter-spacing: -0.5px;
+}
+
+.authForm-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    margin-bottom: 1.8rem;
+}
+
+.authForm-group label {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--accent-color);
+    font-weight: 600;
+}
+
+
+.authForm-input {
+    width: 100%;
+    height: 36px;
+    background-color: transparent;
+    border: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    font-family: inherit;
+    outline: none;
+    padding: 0 0 6px 0;
+    transition: border-color 0.2s ease;
+}
+
+.authForm-input::placeholder {
+    color: rgba(255, 255, 255, 0.25);
+}
+
+
+.auth-actions-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 1.2rem; 
+    gap: 1rem;
+}
+
+.btn-auth-submit {
+    background-color: var(--accent-color);
+    color: #0d0e10;
+    font-weight: 700;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    border: none;
+    padding: 10px 24px; 
+    border-radius: 9999px;
+    cursor: pointer;
+    transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+.btn-auth-submit:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+}
+
+.btn-toggle-auth {
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 0.8rem;
+    cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 4px;
+    padding: 0;
+    transition: color 0.2s ease;
+}
+
+.btn-toggle-auth:hover {
+    color: var(--text-primary);
+}
+
+
+.demo-section {
+    margin-top: 2.5rem;      
+    padding-top: 1.8rem;   
+    border-top: 1px solid var(--border-line-color);
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.8rem;             /* Jämnt avstånd mellan rubrik, knapp och hjälptext */
+}
+
+.demo-section p:first-child {
+    margin-bottom: 0.2rem;
+}
+
+.demo-section p:last-child {
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.4);
+    line-height: 1.4;
+}
+
+.btn-demo {
+    background: transparent;
+    border: 1px solid var(--accent-color);
+    color: var(--accent-color);
+    padding: 8px 20px;       /* Lite mer luft i knappen */
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-demo:hover {
+    background-color: var(--accent-color);
+    color: #0d0e10;
+}
