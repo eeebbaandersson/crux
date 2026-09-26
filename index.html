@@ -1,3 +1,4 @@
+-- Active: 1789899783202@@localhost@5432@bouldering_db
 <!DOCTYPE html>
 <html lang="en">
 
@@ -6,6 +7,7 @@
     <title>CRUX — Bouldering Tracker</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" type="text/css" href="css/style.css">
+    <link rel="stylesheet" type="text/css" href="css/login-register.css">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -22,56 +24,56 @@
 
         <main>
             <!-- 1. AUTH / INLOGGNING (Only showed when the user is NOT logged in) -->
-            <section v-if="!isLoggedIn" id="auth-section" class="user-grid">
-                <h2>{{ isRegister ? 'Create Account' : 'Log In'}}</h2>
-                <div class="user-container">
-                    <form @submit.prevent="handleAuth" class="climb-form">
+           <section v-if="!isLoggedIn" id="auth-section" class="user-grid">
+        
+    <div class="autForm-container">
+        <h2 class="authTitle">{{ isRegister ? 'Register' : 'Sign In' }}</h2>
+        
+        <form @submit.prevent="handleAuth" class="climb-form">
 
-                        <div class="form-group">
-                            <label>Username</label>
-                            <input type="text" v-model="authForm.username" placeholder="Username" required class="form-input">
-                        </div>
+            <div class="authForm-group">
+                <label>Username</label>
+                <input type="text" v-model="authForm.username" placeholder="Enter your username" required class="authForm-input">
+            </div>
 
-                        <div v-if="isRegister" class="form-group">
-                            <label>Email</label>
-                            <input type="text" v-model="authForm.email" placeholder="you@example.com" required class="form-input">
-                        </div>
+            <div v-if="isRegister" class="authForm-group">
+                <label>Email</label>
+                <input type="email" v-model="authForm.email" placeholder="Enter your email address" required class="authForm-input">
+            </div>
 
-                        <div class="form-group">
-                            <label>Password</label>
-                            <input type="password" v-model="authForm.password" placeholder="••••••••" required class="form-input">
-                        </div>
+            <div class="authForm-group">
+                <label>Password</label>
+                <input type="password" v-model="authForm.password" placeholder="Enter your password" required class="authForm-input">
+            </div>
 
-                        <p v-if="authError" style="color: #ef4444; font-size: 0.85rem; margin-top: 0.5rem;">
-                            {{ authError }}
-                        </p>
+            <p v-if="authError" style="color: #ef4444; font-size: 0.85rem; margin-top: 0.5rem;">
+                {{ authError }}
+            </p>
 
-                        <div class="form-actions" style="margin-top: 1rem">
-                            <button type="submit" class="btn-submit" style="width: 100%;">
-                                {{ isRegister ? 'Register' : 'Log In'}}
-                            </button>
-                        </div>
-                        <div style="margin-top: 1rem; text-align: center;">
-                            <p style="margin-bottom: 0.5rem; color: #e0e0e0;">Not feeling fully committed yet?</p>
-                            <button type="button" class="btn-submit" @click="loginAsGuest">
-                                Demo Mode
-                            </button>
-                            <p style="font-size: 0.8rem; color: #888; margin-top: 0.5rem;">
-                                Explore locally without an account or backend server.
-                            </p>
-                        </div>
-                    </form>
+            <div class="auth-actions-row">
+                <button type="button" @click="toggleAuthMode" class="btn-toggle-auth">
+                    {{ isRegister ? "I'm already a member" : "Don't have an account?" }}
+                </button>
 
-                
-                    <div style="margin-top: 1rem; text-align: center;">
-                        <button type="button" @click="toggleAuthMode" class="btn-reset" style="background: transparent; border: none; cursor: pointer;">
-                            {{ isRegister ? 'Already have an account? Log In' : "Don't have an account? Register"}}
-                        </button>
-                    </div>
-                   
-                </div>
+                <button type="submit" class="btn-auth-submit">
+                    {{ isRegister ? 'Register' : 'Sign In' }}
+                </button>
+            </div>
+        </form>
 
-            </section>
+        <!-- Demo Mode-sektion -->
+        <div class="demo-section">
+            <p style="font-size: 0.85rem;">Not feeling fully committed yet?</p>
+            <button type="button" class="btn-demo" @click="loginAsGuest">
+                DEMO MODE
+            </button>
+            <p style="font-size: 0.75rem; color: #666; margin-top: 0.5rem;">
+                Explore locally without an account or backend server.
+            </p>
+        </div>
+    </div>
+</section>
+
             <template v-else>
                 <!-- Hero section-->
             <section id="hero" class="hero-container">
@@ -85,10 +87,6 @@
                     Because <em>"I almost had it"</em> doesn't count on the log.
                 </p>
 
-                <button v-if="isLoggedIn" @click="logout" class="btn-logout">
-                    Log Out 
-                </button>
-             
                 <div class="stats-container">
                     <div class="stats-card">
                         <span class="stat-number">{{ totalFlashes }}</span>
@@ -103,7 +101,6 @@
                     <div class="stats-card">
                         <span class="stat-number">{{ activeProjects }}</span>
                         <span class="stat-label">ACTIVE PROJECTS</span>
-
                     </div>
                 </div>
             </section>
@@ -169,12 +166,12 @@
                     <h2>Logged problems</h2>
                     <div class="problem-container">
 
-                        <!-- Empty state om inga problem loggats-->
+                        <!-- Empty state -->
                         <div v-if="problems.length === 0" class="empty-state">
                             <p>You have no climbs logged yet.</p>
                         </div>
 
-                        <!-- Om filtren ger 0 resultat-->
+                        <!-- If filter = 0 result-->
                         <div v-else-if="filteredProblems.length === 0" class="empty-state">
                             <p>No climbs found for your filters.</p>
                             <button @click="resetFilters" class="btn-reset" style="margin-top: 0.75rem;">
@@ -182,7 +179,7 @@
                             </button>
                         </div>
 
-                        <!-- Problem finns och matchar filtren -->
+                        <!-- Problem found and matches filter options -->
                         <div v-else class="problem-cards-list">
                             <div v-for="problem in filteredProblems" :key="problem.id" class="problem-card"
                                 @click="editProblem(problem)">
@@ -190,7 +187,7 @@
                                 <div class="card-header">
                                     <div class="card-tags">
                                         <span class="badge badge-grade">{{ problem.grade }}</span>
-                                        <!-- Dynamisk klass baserad på status -->
+                                        <!-- Dynamic class based on status -->
                                         <span class="badge" :class="getDisplayStatus(problem).toLowerCase()">
                                             {{ getDisplayStatus(problem) }}
                                         </span>
@@ -396,6 +393,14 @@
                     </form>
                 </div>
             </section>
+
+            <div class="logout-container">
+                <button v-if="isLoggedIn" @click="logout" class="btn-logout">
+                    Log Out 
+                </button>
+            </div>
+           
+
         </template>
     </main>
 
