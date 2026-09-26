@@ -16,6 +16,7 @@ CRUX is a minimalist, dark-themed Vue.js web application designed to log, filter
 
 ## ✨ Features
 
+* **User Authentication & Accounts:** Complete registration and login system with persistent user sessions and easy accessible Demo Mode.
 * **Log & Edit Climbs:** Add new climbs or update existing ones with gym name, date, grade, attempts count, style, status, and optional notes.
 * **Auto-Calculated Flashes:** Logs with 1 attempt and `Send` status automatically get tagged and tracked as a **Flash**.
 * **Filter System:** Instantly filter logged problems by **Status** (*Flash, Send, Project, Reset*), **Grade**, or **Style** (*Dyno, Overhang, Roof, Slab, Vertical*).
@@ -77,7 +78,6 @@ Open `index.html` using **Live Server** in VS Code (or open the file directly in
 
 ## 🚀 Upcoming Features
 
-* **Full Cloud Deployment:** Host backend API and PostgreSQL on cloud plattform. 
-* **User Authentication:** Implement registration/login system as well as account handling.
 * **Climbing Session Management:** Start a new session and group every climb during that time to a specific date and gym.
 * **Advanced Analytics:** Dynamic progress charts over time (grade progression and style breakdown graphs).
+* **Full Cloud Deployment:** Host backend API and PostgreSQL on cloud plattform. 
