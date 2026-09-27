@@ -64,6 +64,8 @@ h2 {
 .brand-badge {
     display: inline-block;
     color: var(--accent-color);
+    font-size: 2rem;
+    font-weight: 800;
     margin-bottom: 0.5rem;
 }
 
@@ -91,6 +93,18 @@ h2 {
 
 .tagline em {
     font-style: italic;
+}
+
+.pulse-indicator {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--accent-color);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    display: block;
+    margin-top: 0.25rem;
+    margin-bottom: 0.25rem;
 }
 
 .stats-container {
@@ -669,6 +683,8 @@ footer {
     overflow-y: auto;
 }
 
+
+
 /* Hides meta-bullet at line-break on smaller screens */
 @media screen and (max-width: 480px) {
     .meta-bullet {
@@ -789,5 +805,10 @@ footer {
         flex: 1;
         height: 0;
         gap: 0.65rem;
+    }
+
+    /* Hides session setup container on desktop view */
+    #session-setup {
+        display: none;
     }
 }

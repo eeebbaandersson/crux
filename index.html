@@ -79,13 +79,14 @@
                 <!-- AKTIV SESSION -->
                 <section v-if="activeSession" id="active-session-view" class="user-grid">
 
-                    <!-- Session Top Bar -->
-                    <div class="active-session-bar">
-                        <div class="session-info">
-                            <span class="pulse-indicator">● ACTIVE SESSION</span>
-                            <h3>{{ activeSession.gym }} — <small>{{ activeSession.date }}</small></h3>
+                    <div class="session-header">
+                        <span class="brand-badge">[CRUX]</span>
+                        <div class="active-session-bar">
+                            <div class="session-info">
+                                <span class="pulse-indicator">● ACTIVE SESSION</span>
+                                <h3>{{ activeSession.gym }} — <small>{{ activeSession.date }}</small></h3>
+                            </div>
                         </div>
-
                     </div>
 
                     <!-- Live Session Stats -->
@@ -105,7 +106,7 @@
                     </div>
 
                     <!-- Form to log problem -->
-                    <div class="problem-grid" style="margin-top: 1.5rem;">
+                    <div style="margin-top: 1.5rem;">
                         <h2>{{ editingId ? 'Edit problem' : 'Add new problem' }}</h2>
                         <div class="user-container">
                             <form @submit.prevent="saveProblem" class="climb-form">
@@ -177,9 +178,9 @@
                     </div>
 
                     <!-- Logged problems during session -->
-                    <div class="problem-grid" style="margin-top: 1.5rem;">
+                    <div style="margin-top: 1.5rem;">
                         <h2>Session Problems({{ sessionProblems.length }})</h2>
-                        <div class="problem-container">
+                        <div class="user-container">
                             <div v-if="sessionProblems.length === 0" class="empty-state">
                                 <p>No climbs logged in this session yet.</p>
                             </div>
@@ -316,7 +317,7 @@
                     <div class="dashboard-grid">
                         <!-- Logged Climbs -->
                         <section id="problem-list" class="problem-grid">
-                            <h2>Logged Climbs</h2>
+                            <h2>Logged Problems</h2>
                             <div class="problem-container">
 
                                 <div v-if="problems.length === 0" class="empty-state">
@@ -373,7 +374,7 @@
 
                     <!-- User Profile -->
                     <section id="user-profile" class="user-grid">
-                        <h2>{{ !isEditingProfile ? 'Your profile' : 'Edit Profile'}}</h2>
+                        <h2>{{ !isEditingProfile ? 'My profile' : 'Edit Profile'}}</h2>
                         <div class="user-container">
                             <div v-if="!isEditingProfile" class="profile-card">
                                 <div class="profile-details">
