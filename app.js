@@ -12,7 +12,16 @@
                         email: '',
                         password: '',
                     },
+                    // Session state
+                    showProblemForm: false,
+                    activeSession: null,
+                    sessionForm: {
+                        gym: '',
+                        date: new Date().toISOString().split('T')[0]
+                    },
+                    sessions: [],
                     
+                    // Filters
                     selectedStatus: '',
                     selectedGrade: '',
                     selectedStyle: '',
@@ -56,6 +65,37 @@
                 totalResets() {
                     return this.problems.filter(p => p.status === 'Reset').length;
                 },
+
+                // --- SESSION COMPUTED PROPERTIES ---
+                sessionProblems() {
+                    if (!this.activeSession) return [];
+                    return this.problems.filter(p => 
+                        p.gym === this.activeSession.gym && 
+                        p.date === this.activeSession.date
+                    );
+                },
+                sessionSends() {
+                    return this.sessionProblems.filter(p => p.status === 'Send'). length;
+                },
+                sessionFlashes() {
+                    return this.sessionProblems.filter(p => p.status === 'Send' && Number(p.tries) === 1).length;
+                },
+                sessionMaxGrade() {
+                    if (this.sessionProblems.length === 0) return '-';
+
+                    const gradeOrder = ['4', '5', '6A', '6B', '6C', '7A', '7B', '7C', '8A'];
+                    const sentGrades = this.sessionProblems
+                    .filter(p => p.status === 'Send')
+                    .map(p => p.grade);
+
+                    if (sentGrades.length === 0) return '-';
+
+                    return sentGrades.reduce((max, current) => {
+                        return gradeOrder.indexOf(current) > gradeOrder.indexOf(max) ? current : max;
+                    }, '4');
+
+                },
+                // --- DASHBOARD FILTERS ---
                 filteredProblems() {
                     const filtered = this.problems.filter(problem => {
                         const statusVal = this.selectedStatus.toLowerCase();
@@ -96,13 +136,37 @@
                 }
             },
             methods: {
+                // --- SESSION METHODS ---
+                startSession() {
+                    if (!this.sessionForm.gym) return;
+
+                    this.activeSession = {
+                        id: Date.now(),
+                        gym: this.sessionForm.gym,
+                        date: this.sessionForm.date,
+                    };
+                },
+                endSession() {
+                    if (!this.activeSession) return;
+
+                    // Spara den avslutade sessionen i historik-listan
+                    this.sessions.unshift({ ...this.activeSession});
+
+                    // Reset form and end active session
+                     this.activeSession = null;
+                     this.sessionForm.gym = '';
+                     this.sessionForm.date = new Date().toISOString().split('T')[0];
+
+                     this.resetForm();
+                    
+                },
+                // --- AUTH & USER METHODS ---
                 getStorageKey() {
                     return this.user.id ? `crux_problems_${this.user.id}` : 'crux_demo_problems';
 
                 },
                 loginAsGuest() {
                     this.authError = '';
-
                     this.isLoggedIn = true;
                     this.user = {
                         id: null, // because of null all API-calls will be skipped
@@ -257,9 +321,13 @@
                     // Skapar en ny kopia till formuläret med alla fält genom spread-operatorn (...)
                     this.newProblem = { ...problem };
 
+                    this.showProblemForm = true;
+
                     // Vänta tills UI:n uppdaterats($nextTick), skrolla sedan till formuläret
                     this.$nextTick(() => {
-                        this.$refs.formSection.scrollIntoView({ block: 'start' });
+                        if (this.$refs.formSection) {
+                            this.$refs.formSection.scrollIntoView({ block: 'start' });
+                        }
                     });
                 },
                 async saveProblem() {
@@ -274,6 +342,9 @@
                 },
                  async logNewProblem() {
                     const userId = this.user.id || null;
+
+                    const currentGym = this.activeSession ? this.activeSession.gym : this.newProblem.gym;
+                    const currentDate = this.activeSession ? this.activeSession.date : this.newProblem.date;
                 
                     const payload = {
                         user_id: userId,
@@ -281,8 +352,8 @@
                         grade: this.newProblem.grade || null,
                         tries: Number(this.newProblem.tries) || 1,
                         current_status: this.newProblem.status || 'Send',
-                        gym: this.newProblem.gym || null,
-                        climb_date: this.newProblem.date,
+                        gym: currentGym || null,
+                        climb_date: currentDate,
                         notes: this.newProblem.notes || null
                     };
 
@@ -304,16 +375,21 @@
                   }
 
                 // fallback when backend is missing
-                     this.problems.push({
+                     this.problems.unshift({
                         id: Date.now(),
                         style: this.newProblem.style,
                         grade: this.newProblem.grade,
                         tries: this.newProblem.tries,
                         status: this.newProblem.status,
-                        gym: this.newProblem.gym,
-                        date: this.newProblem.date,
+                        gym: currentGym,
+                        date: currentDate,
                         notes: this.newProblem.notes
                     });   
+
+                    if (this.user.saveData) {
+                        this.saveProfile(); 
+                    }
+                    this.resetForm();
              },
                  async updateCurrentProblem(id) {
                     const userId = this.user.id || null;
@@ -325,8 +401,8 @@
                             grade: this.newProblem.grade || null,
                             tries: Number(this.newProblem.tries) || 1,
                             current_status: this.newProblem.status || 'Send',
-                            gym: this.newProblem.gym || null,
-                            climb_date: this.newProblem.date,
+                            gym: this.newProblem.gym || (this.activeSession ? this.activeSession.gym : null),
+                            climb_date: this.newProblem.date || (this.activeSession ? this.activeSession.date : null),
                             notes: this.newProblem.notes || null
                         };
 
@@ -369,7 +445,6 @@
                     if (!this.editingId) return;
 
                     this.newProblem.status = 'Reset';
-
                     await this.updateCurrentProblem(this.editingId);
 
                     this.saveProfile();
@@ -404,6 +479,7 @@
                         localStorage.setItem(this.getStorageKey(), JSON.stringify(this.problems));
                     }
                 },
+                // --- PROFILE & STORAGE ---
                 updateProfile() {
                     this.saveProfile();
                     this.isEditingProfile = false;
@@ -425,6 +501,8 @@
                 },
                 logout() {
                     this.isLoggedIn = false;
+                    this.activeSession = null;
+                    this.showProblemForm = false,
                     this.problems = [];
                     this.user = {
                         id: null,
