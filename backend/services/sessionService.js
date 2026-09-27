@@ -38,8 +38,8 @@ async function endSession(sessionId, userId) {
     return rows[0];
 }
 
-async function deleteSession(session_id, userId) {
-    const { rows } = await db.query('DELETE FROM sessions WHERE id = $1 AND user_id = $2',
+async function deleteSession(sessionId, userId) {
+    const { rowCount } = await db.query('DELETE FROM sessions WHERE id = $1 AND user_id = $2',
         [sessionId, userId]
     );
     return rowCount > 0;   
