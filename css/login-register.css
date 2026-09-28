@@ -16,8 +16,9 @@
 
 
 .autForm-container {
-    padding: 60px 80px; 
-    max-width: 500px;
+    padding: 40px 40px; 
+    width: 100%;
+    max-width: 440px;
     margin: 0 auto;
     background-color: transparent;
     border: 1px solid var(--border-color-card);
@@ -86,9 +87,10 @@
     text-transform: uppercase;
     letter-spacing: 0.8px;
     border: none;
-    padding: 10px 24px; 
+    padding: 10px 20px; 
     border-radius: 9999px;
     cursor: pointer;
+    white-space: nowrap;
     transition: transform 0.15s ease, opacity 0.15s ease;
 }
 
@@ -106,13 +108,13 @@
     text-decoration: underline;
     text-underline-offset: 4px;
     padding: 0;
+    white-space: nowrap;
     transition: color 0.2s ease;
 }
 
 .btn-toggle-auth:hover {
     color: var(--text-primary);
 }
-
 
 .demo-section {
     margin-top: 2.5rem;      
@@ -122,7 +124,7 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 0.8rem;             /* Jämnt avstånd mellan rubrik, knapp och hjälptext */
+    gap: 0.8rem;       
 }
 
 .demo-section p:first-child {
@@ -139,7 +141,7 @@
     background: transparent;
     border: 1px solid var(--accent-color);
     color: var(--accent-color);
-    padding: 8px 20px;       /* Lite mer luft i knappen */
+    padding: 8px 20px;      
     border-radius: 9999px;
     font-size: 0.75rem;
     font-weight: 600;
@@ -151,4 +153,16 @@
 .btn-demo:hover {
     background-color: var(--accent-color);
     color: #0d0e10;
+}
+
+/* Tablet */
+@media screen and (min-width: 768px) {
+    .autForm-container {
+        padding: 40px 48px;
+    }
+
+    .auth-actions-row {
+        justify-content: center; 
+        gap: 1.5rem;            
+    }
 }

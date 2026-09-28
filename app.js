@@ -259,6 +259,8 @@ createApp({
         async endSession() {
             if (!this.activeSession) return;
 
+             if (!confirm('Are you sure you want to end this session?')) return;
+
             const isBackendId = typeof this.activeSession.id === 'number' && this.activeSession.id < 1000000000000;
             let syncedWithBackend = false;
 
