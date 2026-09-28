@@ -1,33 +1,41 @@
 const problemService = require('../services/problemService');
 
-// exports. --> För att slippa lista/exportera allt längst ner i filen med module.exports = {}
 exports.getProblems = async (req, res) => {
     try {
-        const { userId } = req.params;
-        const problems = await problemService.getAllProblems(userId);
-        res.json(problems);
-    } catch(error) {
-        return res.status(500).json({ error: error.message });
+        const { sessionId, userId } = req.params;
+
+        if (sessionId) {
+            const problems = await problemService.getProblemsBySessionId(sessionId);
+            return res.json(problems);
+        } 
+        
+        if (userId) {
+            const problems = await problemService.getProblemsByUserId(userId);
+            return res.json(problems);
+        }
+
+        return res.status(400).json({ error: 'Minst sessionId eller userId krävs.' });
+    } catch (error) {
+        console.error('Error fetching problems:', error);
+        res.status(500).json({ error: 'Kunde inte hämta problem.' });
     }
 };
 
 exports.createProblem = async (req, res) => {
     try {
-        // req.body --> Innehåller objektet med alla nödvändiga fält
-        const { userId } = req.params;
-        const { style, grade, gym, climb_date } = req.body;
+        const { sessionId, userId } = req.params;
+        const { style, grade } = req.body;
 
-        if (!style?.trim() || !grade?.trim() || !gym?.trim() || !climb_date) {
+        if (!style?.trim() || !grade?.trim()) {
             return res.status(400).json({
-                 error: 'Fields "style", "grade", "gym" and "climb_date" need to be filled in.'
+                 error: 'Fields "style" and "grade" need to be filled in.'
             });  
         }
-        const newProblem = await problemService.logNewProblem(userId, req.body);
+        const newProblem = await problemService.logNewProblem({ sessionId, userId}, req.body);
         return res.status(201).json(newProblem);
-    } catch(error) {
-        // I user in the URL is not found in database (Foreign Key violation)
+    } catch (error) {
         if (error.code === '23503') {
-            return res.status(404).json({ error: 'User not found.'});
+            return res.status(404).json({ error: 'Session not found.' });
         }
         return res.status(500).json({ error: error.message });
     }
@@ -35,11 +43,11 @@ exports.createProblem = async (req, res) => {
 
 exports.getProblemById = async (req, res) => {
     try {
-        const { userId, id } = req.params; // Plockar ut :id från URL:en
-        const problem = await problemService.getProblemById(id, userId);
+        const { sessionId, userId, id } = req.params;
+        const problem = await problemService.getProblemById(id, { sessionId, userId });
 
         if (!problem) {
-            return res.status(404).json({ message: 'Problem not found or unauthorized.'});
+            return res.status(404).json({ message: 'Problem not found or unauthorized.' });
         }
         return res.json(problem);
     } catch (error) {
@@ -49,39 +57,40 @@ exports.getProblemById = async (req, res) => {
 
 exports.updateProblem = async (req, res) => {
     try {
-        const { userId, id } = req.params;
+        const { sessionId, userId, id } = req.params;
         const problemData = req.body;
-        const { style, grade, gym, climb_date } = problemData;
+        const { style, grade } = problemData;
 
-        if (!style?.trim() || !grade?.trim() || !gym?.trim() || !climb_date) {
+        if (!style?.trim() || !grade?.trim()) {
             return res.status(400).json({
-                error: 'Fields "style", "grade", "gym" and "climb_date" cannot be empty.'
+                error: 'Fields "style" and "grade" cannot be empty.'
             });
         }
-        const updateProblem = await problemService.updateProblem(id, userId, problemData);
 
-        if (!updateProblem) {
-            return res.status(404).json({ message: 'Problem not found or unauthorized.'});
+        // Skicka med både id, sessionId/userId och datan till servicen
+        const updatedProblem = await problemService.updateProblem(id, { sessionId, userId }, problemData);
+
+        if (!updatedProblem) {
+            return res.status(404).json({ message: 'Problem not found or unauthorized.' });
         } 
 
-        return res.json({ message: 'Problem has been updated.', result: updateProblem });
-    } catch(error) {
+        return res.json({ message: 'Problem has been updated.', result: updatedProblem });
+    } catch (error) {
         return res.status(500).json({ error: error.message });
     }
 };
 
 exports.deleteProblem = async (req, res) => {
     try {
-        const { userId, id } = req.params;
-        const isDeleted = await problemService.deleteProblem(id, userId);
+        const { sessionId, userId, id } = req.params;
+        const isDeleted = await problemService.deleteProblem(id, { sessionId, userId });
 
         if (!isDeleted) {
-            return res.status(404).json({ message: 'Problem not found or unauthorized.'});
+            return res.status(404).json({ message: 'Problem not found or unauthorized.' });
         }
 
-        return res.json({ message: 'Problem has been deleted.'});
-    } catch(error) {
+        return res.json({ message: 'Problem has been deleted.' });
+    } catch (error) {
         return res.status(500).json({ error: error.message });
     }
 };
-

@@ -26,7 +26,7 @@ body {
 }
 
 section {
-    padding: 1.5rem 0 3.5rem 0;
+    padding: 1.5rem 0 3rem 0;
 }
 
 .brand-accent,
@@ -64,6 +64,8 @@ h2 {
 .brand-badge {
     display: inline-block;
     color: var(--accent-color);
+    font-size: 2rem;
+    font-weight: 800;
     margin-bottom: 0.5rem;
 }
 
@@ -91,6 +93,18 @@ h2 {
 
 .tagline em {
     font-style: italic;
+}
+
+.pulse-indicator {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--accent-color);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    display: block;
+    margin-top: 0.25rem;
+    margin-bottom: 0.25rem;
 }
 
 .stats-container {
@@ -615,7 +629,7 @@ h2 {
     white-space: normal;
 }
 
-.logout-container {
+.action-container {
     text-align: center;
     margin-top: -1.5rem;
 }
@@ -625,7 +639,7 @@ h2 {
     color: rgba(255, 255, 255, 0.5);
     border: 1px solid rgba(255, 255, 255, 0.5);
     border-radius: 8px;
-    padding: 1rem 1.5rem;
+    padding: 1rem 1.25rem;
     font-size: 0.8rem;
     font-weight: 700;
     text-transform: uppercase;
@@ -647,6 +661,29 @@ footer {
     font-size: 0.85rem;
     opacity: 0.6;
 }
+
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: var(--bg-main);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    padding: 1rem;
+}
+
+.modal-content {
+    max-width: 500px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+
 
 /* Hides meta-bullet at line-break on smaller screens */
 @media screen and (max-width: 480px) {
@@ -695,7 +732,7 @@ footer {
     }
 
     .brand-badge {
-       font-size: 3.2rem;
+        font-size: 3.2rem;
         line-height: 1;
         margin-bottom: 0.5rem;
     }
@@ -727,24 +764,29 @@ footer {
         display: grid;
         grid-template-columns: repeat(2, 1fr);
         gap: 2rem;
-        align-items: stretch;
+        align-items: start; 
     }
 
     .dashboard-grid .problem-grid,
-    .dashboard-grid .log-grid {
-      border-top: none;
+    .dashboard-grid .log-grid,
+    .dashboard-grid #logged-sessions {
+        border-top: none;
         padding-top: 0;
-        margin-top: 1rem;
+        margin-top: 0;
         max-width: 100%;
         width: 100%;
         display: flex;
         flex-direction: column;
-        height: 100%;
+    }
+
+    #logged-sessions .user-container {
+        margin-top: 0;
     }
 
     .problem-container,
-    .form-container {
-       flex: 1;
+    .form-container,
+    .dashboard-grid .user-container {
+        flex: 1;
         min-height: 520px;
         display: flex;
         flex-direction: column;
@@ -763,7 +805,10 @@ footer {
         flex: 1;
         height: 0;
         gap: 0.65rem;
-        
-       
+    }
+
+    /* Hides session setup container on desktop view */
+    #session-setup {
+        display: none;
     }
 }

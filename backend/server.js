@@ -19,7 +19,11 @@ app.use('/api/auth', authRoutes);
 const userRoutes = require('./routes/userRoutes');
 app.use('/api/users', userRoutes);
 
+const sessionRoutes = require('./routes/sessionRoutes');
+app.use('/api/users/:userId/sessions', sessionRoutes);
+
 const problemRoutes = require('./routes/problemRoutes');
+app.use('/api/sessions/:sessionId/problems', problemRoutes);
 app.use('/api/users/:userId/problems', problemRoutes);
 
 
