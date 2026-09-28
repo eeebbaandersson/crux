@@ -136,6 +136,10 @@ createApp({
         }
     },
     methods: {
+        getProblemCountText(session) {
+            const count = this.problems.filter(p => p.gym === session.gym && p.date === session.date).length;
+            return `${count} ${count === 1 ? 'LOGGED PROBLEM' : 'LOGGED PROBLEMS'}`;
+        },
         // -- STORAGE KEYS HELPERS ---
         getProblemsStorageKey() {
             return this.user.id ? `crux_problems_${this.user.id}` : 'crux_demo_problems';
