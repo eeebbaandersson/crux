@@ -24,6 +24,7 @@ app.use('/api/users/:userId/sessions', sessionRoutes);
 
 const problemRoutes = require('./routes/problemRoutes');
 app.use('/api/sessions/:sessionId/problems', problemRoutes);
+app.use('/api/users/:userId/problems', problemRoutes);
 
 
 // Call to verify database connection using minimal SQL-query

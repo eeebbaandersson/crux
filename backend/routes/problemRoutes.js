@@ -6,8 +6,9 @@ const problemController = require('../controllers/problemController');
 // /api/problems --> Anges i server.js filen
 
 router.get('/',problemController.getProblems);
-router.get('/:id', problemController.getProblemById);
 router.post('/', problemController.createProblem);
+
+router.get('/:id', problemController.getProblemById);
 router.put('/:id', problemController.updateProblem);
 router.delete('/:id', problemController.deleteProblem);
 
