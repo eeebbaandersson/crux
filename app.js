@@ -148,8 +148,9 @@ createApp({
 
         },
         // --- SESSION METHODS ---
-        async fecthSessionHistory() {
-            if (!userId) return;
+        async fetchSessionHistory(userId) {
+            const id = userId || this.user.id;
+            if (!id) return;
 
             try {
                 const response = await fetch(`http://localhost:3000/api/users/${userId}/sessions`);
@@ -157,17 +158,17 @@ createApp({
 
                 const data = await response.json();
 
-                this.sessions = data 
-                .filter(s => s.current_status && s.current_status.toLowerCase() !== 'active')
-                .map(s => ({
-                    id: s.id,
-                    gym: s.gym,
-                    date: s.climb_date ? s.climb_date.split('T')[0] : '',
-                    status: s.current_status
-                }));
+                this.sessions = data
+                    .filter(s => s.current_status && s.current_status.toLowerCase() !== 'active')
+                    .map(s => ({
+                        id: s.id,
+                        gym: s.gym,
+                        date: s.climb_date ? s.climb_date.split('T')[0] : '',
+                        status: s.current_status
+                    }));
 
                 if (this.user.saveData) {
-                    localStorage.setItem(this.getActiveSessionStorageKey(), JSON.stringify(this.sessions));
+                    localStorage.setItem(this.getSessionHistoryStorageKey(), JSON.stringify(this.sessions));
                 }
             } catch (error) {
                 console.warn('Backend unavailable. Using localStorage for sessions history:', error.message);
@@ -255,19 +256,23 @@ createApp({
             if (!this.activeSession) return;
 
             const isBackendId = typeof this.activeSession.id === 'number' && this.activeSession.id < 1000000000000;
+            let syncedWithBackend = false;
 
             if (this.user.id && isBackendId) {
                 try {
                     await fetch(`http://localhost:3000/api/users/${this.user.id}/sessions/${this.activeSession.id}/end`, {
                         method: 'PATCH'
                     });
-                    await this.fecthSessionHistory(this.user.id);
+                    await this.fetchSessionHistory(this.user.id);
+                    syncedWithBackend = true;
                 } catch (error) {
                     console.warn('PATCH endSession failed. Ending locally.');
                 }
             }
-            // save ended session in history-list
+           if (!syncedWithBackend) {
+             // save ended session in history-list
             this.sessions.unshift({ ...this.activeSession });
+           }
 
             if (this.user.saveData) {
                 localStorage.setItem(this.getSessionHistoryStorageKey(), JSON.stringify(this.sessions));
@@ -279,6 +284,46 @@ createApp({
             this.sessionForm.gym = '';
             this.sessionForm.date = new Date().toISOString().split('T')[0];
             this.resetForm();
+        },
+        async deleteSession(sessionId) {
+            if (!confirm('Are you sure you want to delete this session?')) return;
+
+            const userId = this.user.id || null;
+            const isLocalOnlyId = typeof sessionId === 'number' && sessionId > 1000000000000;
+
+            if (userId && !isLocalOnlyId) {
+                try {
+                    const response = await fetch(`http://localhost:3000/api/users/${userId}/sessions/${sessionId}`, {
+                        method: 'DELETE'
+                    });
+
+                    if (response.ok) {
+                        // Hämta om både sessioner och problem för att hålla allt synkat med databasen
+                        await this.fetchSessionHistory(userId);
+                        await this.fetchUserProblems(userId);
+                        return;
+                    }
+                } catch (error) {
+                    console.warn('DELETE session failed on backend. Removing locally.');
+                }
+            }
+
+            // Fallback för lokalt tillstånd / demo-läge
+            const sessionToDelete = this.sessions.find(s => s.id === sessionId);
+            if (sessionToDelete) {
+                // Ta bort sessionen ur sessions-arrayen
+                this.sessions = this.sessions.filter(s => s.id !== sessionId);
+
+                // Valfritt: Ta även bort problem kopplade till sessionens gym & datum i UI
+                this.problems = this.problems.filter(
+                    p => !(p.gym === sessionToDelete.gym && p.date === sessionToDelete.date)
+                );
+            }
+
+            if (this.user.saveData) {
+                localStorage.setItem(this.getSessionHistoryStorageKey(), JSON.stringify(this.sessions));
+                localStorage.setItem(this.getProblemsStorageKey(), JSON.stringify(this.problems));
+            }
         },
         // --- AUTH & USER METHODS ---
         loginAsGuest() {
@@ -330,7 +375,7 @@ createApp({
                 if (this.user.id) {
                     await this.fetchActiveSession();
                     await this.fetchUserProblems(this.user.id);
-                    await this.fecthSessionHistory(this.user.id);
+                    await this.fetchSessionHistory(this.user.id);
                 } else {
                     const savedProblems = localStorage.getItem('crux_demo_problems');
                     if (savedProblems) {
@@ -388,7 +433,7 @@ createApp({
                 if (this.user.id) {
                     await this.fetchActiveSession();
                     await this.fetchUserProblems(this.user.id);
-                    await this.fecthSessionHistory(this.user.id);
+                    await this.fetchSessionHistory(this.user.id);
                 }
 
                 // clear authform
@@ -582,9 +627,12 @@ createApp({
             this.resetForm();
         },
         async deleteProblem(id) {
+            
             if (this.editingId === id) {
                 this.resetForm();
             }
+
+            if (!confirm('Are you sure you want to delete this problem?')) return;
 
             const userId = this.user.id || null;
             const isLocalOnlyId = typeof id === 'number' && id > 1000000000000;

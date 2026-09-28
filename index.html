@@ -343,7 +343,8 @@
                                                 <span class="badge badge-style">{{ problem.style }}</span>
                                             </div>
                                             <button @click.stop="deleteProblem(problem.id)" class="btn-delete"
-                                                title="Delete problem">&times;</button>
+                                                title="Delete problem">&times;
+                                            </button>
                                         </div>
 
                                         <div class="card-body">
@@ -385,6 +386,9 @@
                                                     session.date && p.status === 'Send').length }} SENDS
                                                 </span>
                                             </div>
+                                             <button @click.stop="deleteSession(session.id)" class="btn-delete"
+                                                title="Delete session">&times;
+                                            </button>
                                         </div>
 
                                         <div class="card-body">
@@ -393,7 +397,6 @@
                                                 <span>Status: <strong>{{ session.status || 'Ended' }}</strong></span>
                                             </p>
                                         </div>
-
                                     </div>
                                 </div>
 

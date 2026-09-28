@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS sessions (
     current_status VARCHAR(50) DEFAULT 'Active' NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
 -- Bouldering problems --
@@ -36,7 +36,7 @@ CREATE TABLE IF NOT EXISTS problems (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
-    FOREIGN KEY (session_id) REFERENCES sessions(id) ON DELETE SET NULL
+    FOREIGN KEY (session_id) REFERENCES sessions(id) ON DELETE CASCADE
 
 );
 
