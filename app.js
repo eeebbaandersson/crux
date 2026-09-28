@@ -148,6 +148,35 @@ createApp({
 
         },
         // --- SESSION METHODS ---
+        async fecthSessionHistory() {
+            if (!userId) return;
+
+            try {
+                const response = await fetch(`http://localhost:3000/api/users/${userId}/sessions`);
+                if (!response.ok) throw new Error('Could not fetch session history.');
+
+                const data = await response.json();
+
+                this.sessions = data 
+                .filter(s => s.current_status && s.current_status.toLowerCase() !== 'active')
+                .map(s => ({
+                    id: s.id,
+                    gym: s.gym,
+                    date: s.climb_date ? s.climb_date.split('T')[0] : '',
+                    status: s.current_status
+                }));
+
+                if (this.user.saveData) {
+                    localStorage.setItem(this.getActiveSessionStorageKey(), JSON.stringify(this.sessions));
+                }
+            } catch (error) {
+                console.warn('Backend unavailable. Using localStorage for sessions history:', error.message);
+                const savedHistory = localStorage.getItem(this.getSessionHistoryStorageKey());
+                if (savedHistory) {
+                    this.sessions = JSON.parse(savedHistory);
+                }
+            }
+        },
         async fetchActiveSession() {
             if (this.user.id) {
                 try {
@@ -232,6 +261,7 @@ createApp({
                     await fetch(`http://localhost:3000/api/users/${this.user.id}/sessions/${this.activeSession.id}/end`, {
                         method: 'PATCH'
                     });
+                    await this.fecthSessionHistory(this.user.id);
                 } catch (error) {
                     console.warn('PATCH endSession failed. Ending locally.');
                 }
@@ -300,6 +330,7 @@ createApp({
                 if (this.user.id) {
                     await this.fetchActiveSession();
                     await this.fetchUserProblems(this.user.id);
+                    await this.fecthSessionHistory(this.user.id);
                 } else {
                     const savedProblems = localStorage.getItem('crux_demo_problems');
                     if (savedProblems) {
@@ -357,6 +388,7 @@ createApp({
                 if (this.user.id) {
                     await this.fetchActiveSession();
                     await this.fetchUserProblems(this.user.id);
+                    await this.fecthSessionHistory(this.user.id);
                 }
 
                 // clear authform

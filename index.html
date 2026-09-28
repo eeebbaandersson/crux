@@ -366,7 +366,37 @@
                         <section id="logged-sessions" class="problem-grid">
                             <h2>Logged sessions</h2>
                             <div class="user-container">
-                                <!-- Lista över loggade sessioner visas här -->
+
+                                <div v-if="sessions.length === 0" class="empty-state">
+                                    <p>You have no logged sessions yet.</p>
+                                </div>
+
+                                <div v-else class="problem-cards-list">
+                                    <div v-for="session in sessions" :key="session.id" class="problem-card">
+
+                                        <div class="card-header">
+                                            <div class="card-tags">
+                                                <span class="badge badge-grade">
+                                                    {{ problems.filter(p => p.gym === session.gym && p.date ===
+                                                    session.date).length }} PROBLEMS
+                                                </span>
+                                                <span class="badge send">
+                                                    {{ problems.filter(p => p.gym === session.gym && p.date ===
+                                                    session.date && p.status === 'Send').length }} SENDS
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        <div class="card-body">
+                                            <h3 class="gym-title">{{ session.gym }} - {{ session.date }}</h3>
+                                            <p class="meta-info">
+                                                <span>Status: <strong>{{ session.status || 'Ended' }}</strong></span>
+                                            </p>
+                                        </div>
+
+                                    </div>
+                                </div>
+
                             </div>
                         </section>
 
