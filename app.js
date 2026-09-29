@@ -15,6 +15,7 @@ createApp({
             // Session state
             showProblemForm: false,
             activeSession: null,
+            isAddingToSession: false,
             sessionForm: {
                 gym: '',
                 date: new Date().toISOString().split('T')[0]
@@ -139,6 +140,27 @@ createApp({
         getProblemCountText(session) {
             const count = this.problems.filter(p => p.gym === session.gym && p.date === session.date).length;
             return `${count} ${count === 1 ? 'LOGGED PROBLEM' : 'LOGGED PROBLEMS'}`;
+        },
+        getSessionSendText(session) {
+            const sendCount = this.problems.filter(p => p.gym === session.gym && p.date === session.date && p.status === 'Send').length;
+            return `${sendCount} ${sendCount === 1 ? 'SEND' : 'SENDS'}`;
+
+        },
+        addProblemToSession(session) {
+            this.newProblem = {
+                sessionId: session.id,
+                gym: session.gym,
+                date: session.date,
+                grade: '6A',
+                tries: 1,
+                style: '',
+                status: 'Send',
+                notes: ''
+            };
+
+            this.editingId = null;
+            this.isAddingToSession = true;
+
         },
         // -- STORAGE KEYS HELPERS ---
         getProblemsStorageKey() {
@@ -524,6 +546,8 @@ createApp({
         },
         async logNewProblem() {
             const userId = this.user.id || null;
+
+            const targetSessionId = this.activeSession ? this.activeSession.id : this.newProblem.sessionId;
             const currentGym = this.activeSession ? this.activeSession.gym : this.newProblem.gym;
             const currentDate = this.activeSession ? this.activeSession.date : this.newProblem.date;
 
@@ -532,16 +556,14 @@ createApp({
                 grade: this.newProblem.grade || null,
                 tries: Number(this.newProblem.tries) || 1,
                 current_status: this.newProblem.status || 'Send',
-                gym: currentGym || null,
-                climb_date: currentDate,
                 notes: this.newProblem.notes || null
             };
 
-            const isBackendSession = this.activeSession && typeof this.activeSession.id === 'number' && this.activeSession.id < 1000000000000;
+            const isBackendSession = targetSessionId && typeof targetSessionId === 'number' && targetSessionId < 1000000000000;
 
             if (isBackendSession) {
                 try {
-                    const response = await fetch(`http://localhost:3000/api/sessions/${this.activeSession.id}/problems`, {
+                    const response = await fetch(`http://localhost:3000/api/sessions/${targetSessionId}/problems`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(payload)
@@ -551,6 +573,10 @@ createApp({
                         await this.fetchUserProblems(userId);
                         this.resetForm();
                         return;
+                    } else {
+                        const errData = await response.json();
+                        console.warn('Backend rejected problem:', errData.error);
+
                     }
                 } catch (error) {
                     console.warn('POST problem to backend session failed. Falling back to local state.');
@@ -560,6 +586,7 @@ createApp({
             // fallback when backend is missing
             this.problems.unshift({
                 id: Date.now(),
+                sessionId: targetSessionId,
                 style: this.newProblem.style,
                 grade: this.newProblem.grade,
                 tries: this.newProblem.tries,
@@ -572,6 +599,7 @@ createApp({
             if (this.user.saveData) {
                 this.saveProfile();
             }
+            this.resetForm();
         },
         async updateCurrentProblem(id) {
             const userId = this.user.id || null;
@@ -613,6 +641,7 @@ createApp({
         },
         resetForm() {
             this.editingId = null;
+            this.isAddingToSession = false;
             this.newProblem = {
                 style: '',
                 grade: '',
@@ -633,11 +662,6 @@ createApp({
             this.resetForm();
         },
         async deleteProblem(id) {
-            
-            if (this.editingId === id) {
-                this.resetForm();
-            }
-
             if (!confirm('Are you sure you want to delete this problem?')) return;
 
             const userId = this.user.id || null;
@@ -651,6 +675,7 @@ createApp({
 
                     if (response.ok) {
                         await this.fetchUserProblems(userId);
+                        this.resetForm();
                         return;
                     }
                 } catch (error) {
@@ -663,6 +688,8 @@ createApp({
             if (this.user.saveData) {
                 localStorage.setItem(this.getProblemsStorageKey(), JSON.stringify(this.problems));
             }
+
+            this.resetForm();
         },
         // --- PROFILE & STORAGE ---
         updateProfile() {

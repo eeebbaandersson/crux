@@ -527,6 +527,60 @@ h2 {
     justify-content: center;
 }
 
+.attempts-stepper {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    width: fit-content;
+    margin: auto;
+}
+
+
+.btn-stepper {
+    background-color: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: var(--text-primary);
+    width: 46px;
+    height: 42px;
+    border-radius: 8px;
+    font-size: 1.25rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.btn-stepper:hover:not(:disabled) {
+    background-color: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.25);
+}
+
+.btn-stepper:active:not(:disabled) {
+    transform: scale(0.97);
+}
+
+.btn-stepper:disabled {
+    opacity: 0.25;
+    cursor: not-allowed;
+}
+
+.attempts-count-box {
+    background-color: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 8px;
+    height: 42px;
+    min-width: 52px;
+    padding: 0 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 1.05rem;
+    color: var(--text-primary);
+}
+
 .chip-group {
     display: flex;
     gap: 0.5rem;
