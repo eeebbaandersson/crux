@@ -124,8 +124,16 @@
 
                                     <div class="form-group">
                                         <label>Attempts</label>
-                                        <input type="number" v-model.number="newProblem.tries" min="1"
-                                            class="form-input">
+                                        <div class="attempts-stepper">
+                                            <button type="button" class="btn-stepper"
+                                                @click="newProblem.tries = Math.max(1, newProblem.tries -1)"
+                                                :disabled="newProblem.tries <= 1">-</button>
+
+                                            <span class="attempts-count-box">{{ newProblem.tries }}</span>
+
+                                            <button type="button" class="btn-stepper"
+                                                @click="newProblem.tries++">+</button>
+                                        </div>
                                     </div>
                                 </div>
 
@@ -159,19 +167,19 @@
                                         class="form-input">
                                 </div>
 
-                                <div class="form-actions" style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-                                    <button type="submit" class="btn-submit" style="flex: 1;">
-                                        {{ editingId ? 'Update Problem' : 'Log Problem' }}
-                                    </button>
-
+                                <div class="form-actions"
+                                    style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 1rem;">
                                     <template v-if="editingId">
-                                        <button type="button" @click="markAsReset" class="btn-reset">
+                                        <button type="button" @click="markAsReset" class="btn-reset" style="flex: 1;">
                                             Mark as Reset
                                         </button>
-                                        <button type="button" @click="resetForm" class="btn-reset">
+                                        <button type="button" @click="resetForm" class="btn-reset" style="flex: 1;">
                                             Cancel
                                         </button>
                                     </template>
+                                    <button type="submit" class="btn-submit" style="width: 100%; margin-top: 0.25rem;">
+                                        {{ editingId ? 'Update Problem' : 'Log Problem' }}
+                                    </button>
                                 </div>
                             </form>
                         </div>
@@ -381,11 +389,10 @@
                                                     {{ getProblemCountText(session) }}
                                                 </span>
                                                 <span class="badge send">
-                                                    {{ problems.filter(p => p.gym === session.gym && p.date ===
-                                                    session.date && p.status === 'Send').length }} SENDS
+                                                    {{ getSessionSendText(session) }}
                                                 </span>
                                             </div>
-                                             <button @click.stop="deleteSession(session.id)" class="btn-delete"
+                                            <button @click.stop="deleteSession(session.id)" class="btn-delete"
                                                 title="Delete session">&times;
                                             </button>
                                         </div>
@@ -393,9 +400,18 @@
                                         <div class="card-body">
                                             <h3 class="gym-title">{{ session.gym }} - {{ session.date }}</h3>
                                             <p class="meta-info">
-                                                <span>Status: <strong>{{ session.status || 'Ended' }}</strong></span>
+                                                <span>Status: <strong>{{ session.status || 'Finished' }}</strong></span>
                                             </p>
                                         </div>
+
+                                        <div style="margin-top: 0.75rem; border-top: 1px solid var(--border-line-color); padding-top: 0.75rem;">
+                                            <button type="button" @click="addProblemToSession(session)" class="btn-reset" style="width: 100%; font-size: 0.75rem;">
+                                                Add forgotten climb?
+                                            </button>
+                                        </div>
+
+
+
                                     </div>
                                 </div>
 
@@ -463,16 +479,16 @@
                                         <label
                                             style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
                                             <input type="checkbox" v-model="user.saveData" @change="handleStorage">
-                                            <span style="font-size: 0.85rem;">Save climbing data locally
+                                            <span style="font-size: 0.75rem;">Save climbing data locally
                                                 (localStorage)</span>
                                         </label>
                                     </div>
                                 </div>
 
                                 <div class="form-actions">
-                                    <button type="submit" class="btn-submit" style="flex: 1;">Save Changes</button>
                                     <button type="button" @click="isEditingProfile = false"
                                         class="btn-reset">Cancel</button>
+                                    <button type="submit" class="btn-submit" style="flex: 1;">Save Changes</button>
                                 </div>
                             </form>
                         </div>
@@ -490,14 +506,13 @@
                     </button>
                 </div>
 
-                <!-- Modal view to edit earlier logged climbs-->
-                <div v-if="editingId && !activeSession" class="modal-overlay" @click.self="resetForm">
+                <!-- Modal view to edit earlier logged climbs or add forgotten climb-->
+                <div v-if="(editingId || isAddingToSession) && !activeSession" class="modal-overlay" @click.self="resetForm">
                     <div class="modal-content user-container">
                         <div
                             style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                            <h2>Edit Climb</h2>
-                            <button type="button" @click="resetForm" class="btn-delete"
-                                style="font-size: 1.5rem;">&times;</button>
+                            <h2>{{ editingId ? 'Edit Climb' : 'Add Climb' }}</h2>
+                            <button type="button" @click="resetForm" class="btn-delete" style="font-size: 1.5rem;">&times;</button>
                         </div>
 
                         <form @submit.prevent="saveProblem" class="climb-form">
@@ -522,7 +537,15 @@
                                 </div>
                                 <div class="form-group">
                                     <label>Attempts</label>
-                                    <input type="number" v-model.number="newProblem.tries" min="1" class="form-input">
+                                    <div class="attempts-stepper">
+                                        <button type="button" class="btn-stepper"
+                                            @click="newProblem.tries = Math.max(1, newProblem.tries -1)"
+                                            :disabled="newProblem.tries <= 1">-</button>
+
+                                        <span class="attempts-count-box">{{ newProblem.tries }}</span>
+
+                                        <button type="button" class="btn-stepper" @click="newProblem.tries++">+</button>
+                                    </div>
                                 </div>
                             </div>
 
@@ -555,16 +578,21 @@
                             </div>
 
                             <div class="form-actions"
-                                style="display: flex; gap: 0.5rem; margin-top: 1rem; flex-wrap: wrap;">
-                                <button type="submit" class="btn-submit" style="flex: 1;">Save Changes</button>
-                                <button type="button" @click="deleteProblem(editingId)" class="btn-reset"
-                                    style="color: #ef4444; border-color: #ef4444;">Delete</button>
-                                <button type="button" @click="resetForm" class="btn-reset">Cancel</button>
+                                style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 1.25rem;">
+                                <button v-if="editingId" type="button" @click="deleteProblem(editingId)" class="btn-reset"style="flex: 1; color: #ef4444; border-color: #ef4444;">
+                                    Delete
+                                </button>
+                                <button type="button" @click="resetForm" class="btn-reset" :style="{ flex: editingId ? '1' : '1 0 100%' }">
+                                    Cancel
+                                </button>
+                                <button type="submit" class="btn-submit" style="width: 100%; margin-top: 0.25rem;">
+                                    {{ editingId ? 'Save Changes' : 'Log Climb' }}
+                                </button>
                             </div>
+
                         </form>
                     </div>
                 </div>
-
             </template>
         </main>
 
