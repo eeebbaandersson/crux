@@ -273,7 +273,8 @@ h2 {
     flex: 1;
     min-height: 0;
     overflow-y: auto;
-    padding-right: 0.75rem;
+    padding-left: 0.25rem;
+    padding-right: 0.25rem;
     scrollbar-gutter: stable;
     display: flex;
     flex-direction: column;
@@ -282,7 +283,7 @@ h2 {
 
 /* Scrollbar */
 .problem-cards-list::-webkit-scrollbar {
-    width: 6px;
+    width: 4px;
 }
 
 .problem-cards-list::-webkit-scrollbar-track {
