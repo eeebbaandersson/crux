@@ -139,7 +139,7 @@ createApp({
     methods: {
         getProblemCountText(session) {
             const count = this.problems.filter(p => p.gym === session.gym && p.date === session.date).length;
-            return `${count} ${count === 1 ? 'LOGGED PROBLEM' : 'LOGGED PROBLEMS'}`;
+            return `${count} ${count === 1 ? 'PROBLEM' : 'PROBLEMS'}`;
         },
         getSessionSendText(session) {
             const sendCount = this.problems.filter(p => p.gym === session.gym && p.date === session.date && p.status === 'Send').length;
