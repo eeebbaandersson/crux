@@ -4,7 +4,12 @@
     --accent-color: #4ade80;
     --border-color-card: rgba(255, 255, 255, 0.06);
     --border-line-color: rgba(255, 255, 255, 0.08);
-    --border-radius-card: 12px;
+
+    --border-radius-lg: 24px;
+    --border-radius-md: 16px;
+    --border-radius-inner: 12px;
+    --border-radius-sm: 8px;
+    
     --font-main: 'Inter', system-ui, -apple-system, sans-serif;
 }
 
@@ -120,7 +125,7 @@ h2 {
 .stats-card {
     background-color: transparent;
     border: 1px solid var(--border-color-card);
-    border-radius: var(--border-radius-card);
+    border-radius: var(--border-radius-md);
     padding: 1rem 1.25rem;
     display: flex;
     flex-direction: column;
@@ -190,7 +195,7 @@ h2 {
     -moz-appearance: none;
     background-color: rgba(255, 255, 255, 0.03);
     border: 1px solid var(--border-color-card);
-    border-radius: 8px;
+    border-radius: var(--border-radius-sm);
     color: var(--text-primary);
     padding: 0.5rem 2.2rem 0.5rem 0.9rem;
     font-size: 0.8rem;
@@ -216,7 +221,7 @@ h2 {
 .btn-reset {
     background-color: rgba(255, 255, 255, 0.04);
     border: 1px solid var(--border-color-card);
-    border-radius: 8px;
+    border-radius: var(--border-radius-sm);
     color: rgba(255, 255, 255, 0.6);
     padding: 0.5rem 0.9rem;
     font-size: 0.8rem;
@@ -231,6 +236,27 @@ h2 {
 .btn-reset:hover {
     background-color: rgba(255, 255, 255, 0.08);
     border-color: rgba(255, 255, 255, 0.2);
+}
+
+.btn-add-forgotten {
+    width: 100%;
+    background-color: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border-color-card);
+    border-radius: var(--border-radius-inner); 
+    color: rgba(255, 255, 255, 0.7);
+    padding: 0.6rem 0.9rem;
+    font-size: 0.75rem;
+    font-family: inherit;
+    font-weight: 600;
+    cursor: pointer;
+    outline: none;
+    transition: all 0.2s ease;
+}
+
+.btn-add-forgotten:hover {
+    background-color: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.2);
+    color: var(--text-primary);
 }
 
 .dashboard-grid {
@@ -255,12 +281,12 @@ h2 {
 .user-container {
     background-color: transparent;
     border: 1px solid var(--border-color-card);
-    border-radius: var(--border-radius-card);
+    border-radius: var(--border-radius-md);
     padding: 1.25rem;
     overflow: hidden;
     display: flex;
     flex-direction: column;
-    max-height: 520px;
+    max-height: 560px;
     height: auto;
     box-sizing: border-box;
 }
@@ -303,7 +329,7 @@ h2 {
 .problem-card {
     background-color: rgba(255, 255, 255, 0.015);
     border: 1px solid var(--border-color-card);
-    border-radius: var(--border-radius-card);
+    border-radius: var(--border-radius-inner);
     padding: 1.25rem;
     display: flex;
     flex-direction: column;
@@ -462,7 +488,7 @@ h2 {
     width: 100%;
     background-color: rgba(255, 255, 255, 0.03);
     border: 1px solid var(--border-color-card);
-    border-radius: 8px;
+    border-radius: var(--border-radius-sm);
     color: var(--text-primary);
     padding: 0 0.9rem;
     font-size: 0.85rem;
@@ -551,7 +577,7 @@ h2 {
     color: var(--text-primary);
     width: 46px;
     height: 42px;
-    border-radius: 8px;
+    border-radius: var(--border-radius-sm);
     font-size: 1.25rem;
     font-weight: 600;
     cursor: pointer;
@@ -578,7 +604,7 @@ h2 {
 .attempts-count-box {
     background-color: rgba(255, 255, 255, 0.02);
     border: 1px solid rgba(255, 255, 255, 0.06);
-    border-radius: 8px;
+    border-radius: var(--border-radius-sm);
     height: 42px;
     min-width: 52px;
     padding: 0 32px;
@@ -601,7 +627,7 @@ h2 {
 .chip-btn {
     background-color: rgba(255, 255, 255, 0.03);
     border: 1px solid var(--border-color-card);
-    border-radius: 8px;
+    border-radius: var(--border-radius-sm);
     color: rgba(255, 255, 255, 0.6);
     padding: 0 0.85rem; 
     font-size: 0.75rem;
@@ -632,7 +658,7 @@ h2 {
     background-color: var(--accent-color);
     color: #121315;
     border: none;
-    border-radius: 8px;
+    border-radius: var(--border-radius-inner);
     padding: 0.75rem 1rem;
     font-size: 0.8rem;
     font-weight: 700;
@@ -644,8 +670,8 @@ h2 {
 }
 
 .btn-submit:hover {
-    opacity: 0.9;
-    transform: translateY(-1px);
+    opacity: 1;
+    box-shadow: 0 6px 20px rgba(74, 222, 128, 0.1);
 }
 
 .empty-state {
@@ -694,22 +720,22 @@ h2 {
 
 .action-container {
     text-align: center;
-    margin-top: -1.5rem;
+    margin-top: 1.5rem;
+    margin-bottom: 2rem;
 }
 
 .btn-logout {
     background-color: transparent;
     color: rgba(255, 255, 255, 0.5);
     border: 1px solid rgba(255, 255, 255, 0.5);
-    border-radius: 8px;
-    padding: 1rem 1.25rem;
+    border-radius: var(--border-radius-inner);
+    padding: 0.75rem 1.5rem;
     font-size: 0.8rem;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.5px;
     cursor: pointer;
     transition: all 0.2s ease;
-    margin-top: 0.5rem; 
 }
 
 .btn-logout:hover {
@@ -720,9 +746,24 @@ h2 {
 footer {
     text-align: center;
     font-family: 'JetBrains Mono', monospace;
-    padding: 2rem 0;
-    font-size: 0.85rem;
-    opacity: 0.6;
+    padding: 1rem 0 2rem 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.footer-brand {
+    color: var(--accent-color);
+    font-weight: 800;
+    font-size: 1.1rem;
+    letter-spacing: 1px;
+}
+
+footer p {
+   font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.35);
 }
 
 .modal-overlay {
@@ -847,7 +888,7 @@ footer {
     .form-container,
     .dashboard-grid .user-container {
         flex: 1;
-        min-height: 520px;
+        min-height: 560px;
         display: flex;
         flex-direction: column;
         box-sizing: border-box;

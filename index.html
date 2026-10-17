@@ -24,6 +24,18 @@
         <main>
             <!-- 1. AUTH / INLOGGNING -->
             <section v-if="!isLoggedIn" id="auth-section" class="user-grid">
+
+                    <div class="toggle-container">
+                        <span class="toggle-label">Register</span>
+                        <label class="switch">
+                            <input 
+                            type="checkbox" 
+                            v-model="isRegister"
+                            />
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+
                 <div class="autForm-container">
                     <h2 class="authTitle">{{ isRegister ? 'Register' : 'Sign In' }}</h2>
 
@@ -51,31 +63,26 @@
                         </p>
 
                         <div class="auth-actions-row">
-                            <button type="button" @click="toggleAuthMode" class="btn-toggle-auth">
-                                {{ isRegister ? "Already have an account?" : "Don't have an account?" }}
-                            </button>
-
                             <button type="submit" class="btn-auth-submit">
                                 {{ isRegister ? 'Register' : 'Sign In' }}
                             </button>
                         </div>
                     </form>
 
-                    <div class="demo-section">
-                        <p style="font-size: 0.85rem;">Not feeling fully committed yet?</p>
-                        <button type="button" class="btn-demo" @click="loginAsGuest">
-                            DEMO MODE
-                        </button>
-                        <p style="font-size: 0.75rem; color: #666; margin-top: 0.5rem;">
-                            Explore locally without an account or backend server.
-                        </p>
-                    </div>
+                </div>
+                 <div class="demo-section">
+                     <button type="button" class="btn-demo" @click="loginAsGuest">
+                        DEMO MODE
+                    </button>
+                    <p class="demo-subtitle">
+                        Not feeling fully committed yet?<br>
+                        Explore locally without an account
+                    </p>
                 </div>
             </section>
 
             <!-- Logged in view -->
             <template v-else>
-
                 <!-- AKTIV SESSION -->
                 <section v-if="activeSession" id="active-session-view" class="user-grid">
 
@@ -405,7 +412,7 @@
                                         </div>
 
                                         <div style="margin-top: 0.75rem; border-top: 1px solid var(--border-line-color); padding-top: 0.75rem;">
-                                            <button type="button" @click="addProblemToSession(session)" class="btn-reset" style="width: 100%; font-size: 0.75rem;">
+                                            <button type="button" @click="addProblemToSession(session)" class="btn-add-forgotten" style="width: 100%; font-size: 0.75rem;">
                                                 Add forgotten climb?
                                             </button>
                                         </div>
@@ -596,9 +603,10 @@
             </template>
         </main>
 
-        <footer>
-            <p>&copy; 2026 CRUX. All rights reserved.</p>
-        </footer>
+     <footer>
+        <div class="footer-brand">[CRUX]</div>
+        <p>&copy; 2026. All rights reserved.</p>
+    </footer>
 
     </div>
 
