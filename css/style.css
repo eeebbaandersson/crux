@@ -24,14 +24,16 @@ html {
 }
 
 body {
-    width: 100%;
+   width: 100%;
+    min-height: 100vh;
     background-color: var(--bg-main);
     color: var(--text-primary);
     font-family: var(--font-main);
+    overflow-x: hidden;
 }
 
 section {
-    padding: 1.5rem 0 3rem 0;
+    padding: 1.5rem 0 2rem 0;
 }
 
 .brand-accent,
