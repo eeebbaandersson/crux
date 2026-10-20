@@ -245,6 +245,7 @@ footer {
     cursor: pointer;
     transition: all 0.2s ease;
     margin-bottom: 0.25rem;
+    margin-top: 1.5rem;
 }
 
 .btn-demo:hover {
