@@ -1,616 +1,908 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-
-<head>
-    <meta charset="UTF-8">
+  <head>
+    <meta charset="UTF-8" />
     <title>CRUX — Bouldering Tracker</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" type="text/css" href="css/style.css">
-    <link rel="stylesheet" type="text/css" href="css/login-register.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" type="text/css" href="css/style.css" />
+    <link rel="stylesheet" type="text/css" href="css/login-register.css" />
 
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;800&display=swap" rel="stylesheet">
-</head>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;800&display=swap"
+      rel="stylesheet"
+    />
+  </head>
 
-<body>
-
+  <body>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
 
     <div id="app">
+      <header></header>
 
-        <header></header>
+      <main>
+        <!-- 1. AUTH / INLOGGNING -->
+        <section v-if="!isLoggedIn" id="auth-section">
+          <div class="auth-desktop-split">
+            <div class="auth-image-pane">
+            </div>
 
-        <main>
-            <!-- 1. AUTH / INLOGGNING -->
-            <section v-if="!isLoggedIn" id="auth-section" class="user-grid">
+            <div class="auth-content-pane">
+              <div class="toggle-container">
+                <span class="toggle-label">Register</span>
+                <label class="switch">
+                  <input type="checkbox" v-model="isRegister" />
+                  <span class="slider"></span>
+                </label>
+              </div>
 
-                    <div class="toggle-container">
-                        <span class="toggle-label">Register</span>
-                        <label class="switch">
-                            <input 
-                            type="checkbox" 
-                            v-model="isRegister"
-                            />
-                            <span class="slider"></span>
-                        </label>
+              <div class="autForm-container">
+                <h2 class="authTitle">
+                  {{ isRegister ? 'Register' : 'Sign In' }}
+                </h2>
+
+                <form @submit.prevent="handleAuth" class="climb-form">
+                  <div class="authForm-group">
+                    <label>Username</label>
+                    <input
+                      type="text"
+                      v-model="authForm.username"
+                      placeholder="Enter your username"
+                      required
+                      class="authForm-input"
+                    />
+                  </div>
+
+                  <div v-if="isRegister" class="authForm-group">
+                    <label>Email</label>
+                    <input
+                      type="email"
+                      v-model="authForm.email"
+                      placeholder="Enter your email address"
+                      required
+                      class="authForm-input"
+                    />
+                  </div>
+
+                  <div class="authForm-group">
+                    <label>Password</label>
+                    <input
+                      type="password"
+                      v-model="authForm.password"
+                      placeholder="Enter your password"
+                      required
+                      class="authForm-input"
+                    />
+                  </div>
+
+                  <p
+                    v-if="authError"
+                    style="
+                      color: #ef4444;
+                      font-size: 0.85rem;
+                      margin-top: 0.5rem;
+                    "
+                  >
+                    {{ authError }}
+                  </p>
+
+                  <div class="auth-actions-row">
+                    <button type="submit" class="btn-auth-submit">
+                      {{ isRegister ? 'Register' : 'Sign In' }}
+                    </button>
+                  </div>
+                </form>
+              </div>
+                 <div class="demo-section">
+            <button type="button" class="btn-demo" @click="loginAsGuest">
+              DEMO MODE
+            </button>
+            <p class="demo-subtitle">
+              Not feeling fully committed yet?<br />
+              Explore locally without an account.
+            </p>
+          </div>
+            </div>
+          </div>
+
+       
+        </section>
+
+  
+        <template v-else>
+          <!-- AKTIV SESSION -->
+          <section
+            v-if="activeSession"
+            id="active-session-view"
+            class="user-grid"
+          >
+            <div class="session-header">
+              <span class="brand-badge">[CRUX]</span>
+              <div class="active-session-bar">
+                <div class="session-info">
+                  <span class="pulse-indicator">● ACTIVE SESSION</span>
+                  <h3>
+                    {{ activeSession.gym }} —
+                    <small>{{ activeSession.date }}</small>
+                  </h3>
+                </div>
+              </div>
+            </div>
+
+            <!-- Live Session Stats -->
+            <div class="stats-container" style="margin-top: 1rem">
+              <div class="stats-card">
+                <span class="stat-number">{{ sessionSends }}</span>
+                <span class="stat-label">SESSION SENDS</span>
+              </div>
+              <div class="stats-card">
+                <span class="stat-number">{{ sessionFlashes }}</span>
+                <span class="stat-label">SESSION FLASHES</span>
+              </div>
+              <div class="stats-card">
+                <span class="stat-number">{{ sessionMaxGrade }}</span>
+                <span class="stat-label">MAX GRADE</span>
+              </div>
+            </div>
+
+            <!-- Form to log problem -->
+            <div class="user-grid">
+              <h2>{{ editingId ? 'Edit problem' : 'Add new problem' }}</h2>
+              <div class="user-container">
+                <form @submit.prevent="saveProblem" class="climb-form">
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label>Grade</label>
+                      <select
+                        v-model="newProblem.grade"
+                        required
+                        class="form-select"
+                      >
+                        <option value="" disabled>Select grade</option>
+                        <option
+                          v-for="g in ['4','5','6A','6B','6C','7A','7B','7C','8A']"
+                          :key="g"
+                          :value="g"
+                        >
+                          {{ g }}
+                        </option>
+                      </select>
                     </div>
 
-                <div class="autForm-container">
-                    <h2 class="authTitle">{{ isRegister ? 'Register' : 'Sign In' }}</h2>
+                    <div class="form-group">
+                      <label>Attempts</label>
+                      <div class="attempts-stepper">
+                        <button
+                          type="button"
+                          class="btn-stepper"
+                          @click="newProblem.tries = Math.max(1, newProblem.tries -1)"
+                          :disabled="newProblem.tries <= 1"
+                        >
+                          -
+                        </button>
 
-                    <form @submit.prevent="handleAuth" class="climb-form">
-                        <div class="authForm-group">
-                            <label>Username</label>
-                            <input type="text" v-model="authForm.username" placeholder="Enter your username" required
-                                class="authForm-input">
-                        </div>
+                        <span class="attempts-count-box"
+                          >{{ newProblem.tries }}</span
+                        >
 
-                        <div v-if="isRegister" class="authForm-group">
-                            <label>Email</label>
-                            <input type="email" v-model="authForm.email" placeholder="Enter your email address" required
-                                class="authForm-input">
-                        </div>
+                        <button
+                          type="button"
+                          class="btn-stepper"
+                          @click="newProblem.tries++"
+                        >
+                          +
+                        </button>
+                      </div>
+                    </div>
+                  </div>
 
-                        <div class="authForm-group">
-                            <label>Password</label>
-                            <input type="password" v-model="authForm.password" placeholder="Enter your password"
-                                required class="authForm-input">
-                        </div>
+                  <div class="form-group full-width">
+                    <label>Style</label>
+                    <div class="chip-group">
+                      <button
+                        type="button"
+                        v-for="style in ['Dyno', 'Overhang', 'Roof', 'Slab', 'Vertical']"
+                        :key="style"
+                        class="chip-btn"
+                        :class="{ active: newProblem.style === style }"
+                        @click="newProblem.style = style"
+                      >
+                        {{ style }}
+                      </button>
+                    </div>
+                  </div>
 
-                        <p v-if="authError" style="color: #ef4444; font-size: 0.85rem; margin-top: 0.5rem;">
-                            {{ authError }}
-                        </p>
+                  <div class="form-group full-width">
+                    <label>Status</label>
+                    <div class="chip-group">
+                      <button
+                        type="button"
+                        v-for="status in ['Send', 'Project']"
+                        :key="status"
+                        class="chip-btn"
+                        :class="{ active: newProblem.status === status }"
+                        @click="newProblem.status = status"
+                      >
+                        {{ status }}
+                      </button>
+                    </div>
+                  </div>
 
-                        <div class="auth-actions-row">
-                            <button type="submit" class="btn-auth-submit">
-                                {{ isRegister ? 'Register' : 'Sign In' }}
-                            </button>
-                        </div>
-                    </form>
+                  <div class="form-group">
+                    <label>Notes (optional)</label>
+                    <input
+                      type="text"
+                      v-model="newProblem.notes"
+                      placeholder="e.g. Heel hook was key!"
+                      class="form-input"
+                    />
+                  </div>
 
-                </div>
-                 <div class="demo-section">
-                     <button type="button" class="btn-demo" @click="loginAsGuest">
-                        DEMO MODE
+                  <div
+                    class="form-actions"
+                    style="
+                      display: flex;
+                      gap: 0.5rem;
+                      flex-wrap: wrap;
+                      margin-top: 1rem;
+                    "
+                  >
+                    <template v-if="editingId">
+                      <button
+                        type="button"
+                        @click="markAsReset"
+                        class="btn-reset"
+                        style="flex: 1"
+                      >
+                        Mark as Reset
+                      </button>
+                      <button
+                        type="button"
+                        @click="resetForm"
+                        class="btn-reset"
+                        style="flex: 1"
+                      >
+                        Cancel
+                      </button>
+                    </template>
+                    <button
+                      type="submit"
+                      class="btn-submit"
+                      style="width: 100%; margin-top: 0.25rem"
+                    >
+                      {{ editingId ? 'Update Problem' : 'Log Problem' }}
                     </button>
-                    <p class="demo-subtitle">
-                        Not feeling fully committed yet?<br>
-                        Explore locally without an account.
-                    </p>
+                  </div>
+                </form>
+              </div>
+            </div>
+
+            <!-- Logged problems during session -->
+            <div class="user-grid">
+              <h2>Session Problems({{ sessionProblems.length }})</h2>
+              <div class="user-container">
+                <div v-if="sessionProblems.length === 0" class="empty-state">
+                  <p>No climbs logged in this session yet.</p>
                 </div>
+                <div v-else class="problem-cards-list">
+                  <div
+                    v-for="problem in sessionProblems"
+                    :key="problem.id"
+                    class="problem-card"
+                    @click="editProblem(problem)"
+                  >
+                    <div class="card-header">
+                      <div class="card-tags">
+                        <span class="badge badge-grade"
+                          >{{ problem.grade }}</span
+                        >
+                        <span
+                          class="badge"
+                          :class="getDisplayStatus(problem).toLowerCase()"
+                        >
+                          {{ getDisplayStatus(problem) }}
+                        </span>
+                        <span class="badge badge-style"
+                          >{{ problem.style }}</span
+                        >
+                      </div>
+                      <button
+                        @click.stop="deleteProblem(problem.id)"
+                        class="btn-delete"
+                        title="Delete problem"
+                      >
+                        &times;
+                      </button>
+                    </div>
+                    <div class="card-body">
+                      <p class="meta-info">
+                        <span
+                          >{{ problem.tries }} {{ problem.tries === 1 ? 'try' :
+                          'tries' }}</span
+                        >
+                        <template v-if="problem.notes">
+                          <span class="meta-bullet">&bull;</span>
+                          <span class="problem-notes"
+                            >"{{ problem.notes }}"</span
+                          >
+                        </template>
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- DASHBOARD (no active session) -->
+          <template v-else>
+            <!-- Hero section -->
+            <section id="hero" class="hero-container">
+              <h1>
+                <span class="brand-badge">[CRUX]</span><br />
+                LOG YOUR SENDS. <br />
+                TRACK YOUR PROJECTS.
+              </h1>
+              <p class="tagline">
+                Data-driven climbing.<br />
+                Because <em>"I almost had it"</em> doesn't count on the log.
+              </p>
+
+              <div class="stats-container">
+                <div class="stats-card">
+                  <span class="stat-number">{{ totalFlashes }}</span>
+                  <span class="stat-label">TOTAL FLASHES</span>
+                </div>
+                <div class="stats-card">
+                  <span class="stat-number">{{ totalSends }}</span>
+                  <span class="stat-label">TOTAL SENDS</span>
+                </div>
+                <div class="stats-card">
+                  <span class="stat-number">{{ activeProjects }}</span>
+                  <span class="stat-label">ACTIVE PROJECTS</span>
+                </div>
+              </div>
             </section>
 
-            <!-- Logged in view -->
-            <template v-else>
-                <!-- AKTIV SESSION -->
-                <section v-if="activeSession" id="active-session-view" class="user-grid">
-
-                    <div class="session-header">
-                        <span class="brand-badge">[CRUX]</span>
-                        <div class="active-session-bar">
-                            <div class="session-info">
-                                <span class="pulse-indicator">● ACTIVE SESSION</span>
-                                <h3>{{ activeSession.gym }} — <small>{{ activeSession.date }}</small></h3>
-                            </div>
-                        </div>
+            <!-- Start Session Card -->
+            <section id="session-setup" class="user-grid">
+              <h2>Start new session</h2>
+              <div class="user-container">
+                <form @submit.prevent="startSession" class="climb-form">
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label>Gym</label>
+                      <input
+                        type="text"
+                        v-model="sessionForm.gym"
+                        placeholder="e.g. Backa Boulder"
+                        required
+                        class="form-input"
+                      />
                     </div>
 
-                    <!-- Live Session Stats -->
-                    <div class="stats-container" style="margin-top: 1rem;">
-                        <div class="stats-card">
-                            <span class="stat-number">{{ sessionSends }}</span>
-                            <span class="stat-label">SESSION SENDS</span>
-                        </div>
-                        <div class="stats-card">
-                            <span class="stat-number">{{ sessionFlashes }}</span>
-                            <span class="stat-label">SESSION FLASHES</span>
-                        </div>
-                        <div class="stats-card">
-                            <span class="stat-number">{{ sessionMaxGrade }}</span>
-                            <span class="stat-label">MAX GRADE</span>
-                        </div>
+                    <div class="form-group">
+                      <label>Date</label>
+                      <input
+                        type="date"
+                        v-model="sessionForm.date"
+                        required
+                        class="form-input"
+                      />
                     </div>
+                  </div>
+                  <div class="form-actions" style="margin-top: 1rem">
+                    <button
+                      type="submit"
+                      class="btn-submit"
+                      style="width: 100%"
+                    >
+                      Start Session
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </section>
 
-                    <!-- Form to log problem -->
-                    <div style="margin-top: 1.5rem;">
-                        <h2>{{ editingId ? 'Edit problem' : 'Add new problem' }}</h2>
-                        <div class="user-container">
-                            <form @submit.prevent="saveProblem" class="climb-form">
-                                <div class="form-row">
-                                    <div class="form-group">
-                                        <label>Grade</label>
-                                        <select v-model="newProblem.grade" required class="form-select">
-                                            <option value="" disabled>Select grade</option>
-                                            <option v-for="g in ['4','5','6A','6B','6C','7A','7B','7C','8A']" :key="g"
-                                                :value="g">
-                                                {{ g }}
-                                            </option>
-                                        </select>
-                                    </div>
+            <!-- Filters -->
+            <section id="filters" class="filter-grid">
+              <div class="filter-container">
+                <div class="filter-group">
+                  <div class="filter-item">
+                    <label class="filter-label">Status</label>
+                    <select v-model="selectedStatus" class="filter-select">
+                      <option value="">All</option>
+                      <option value="FLASH">Flashes</option>
+                      <option value="PROJECT">Projects</option>
+                      <option value="RESET">Resets</option>
+                      <option value="SEND">Sends</option>
+                    </select>
+                  </div>
 
-                                    <div class="form-group">
-                                        <label>Attempts</label>
-                                        <div class="attempts-stepper">
-                                            <button type="button" class="btn-stepper"
-                                                @click="newProblem.tries = Math.max(1, newProblem.tries -1)"
-                                                :disabled="newProblem.tries <= 1">-</button>
+                  <div class="filter-item">
+                    <label class="filter-label">Grade</label>
+                    <select v-model="selectedGrade" class="filter-select">
+                      <option value="">All</option>
+                      <option
+                        v-for="g in ['4','5','6A','6B','6C','7A','7B','7C','8A']"
+                        :key="g"
+                        :value="g"
+                      >
+                        {{ g }}
+                      </option>
+                    </select>
+                  </div>
 
-                                            <span class="attempts-count-box">{{ newProblem.tries }}</span>
+                  <div class="filter-item">
+                    <label class="filter-label">Style</label>
+                    <select v-model="selectedStyle" class="filter-select">
+                      <option value="">All</option>
+                      <option
+                        v-for="s in ['DYNO','OVERHANG','ROOF','SLAB','VERTICAL']"
+                        :key="s"
+                        :value="s"
+                      >
+                        {{ s }}
+                      </option>
+                    </select>
+                  </div>
 
-                                            <button type="button" class="btn-stepper"
-                                                @click="newProblem.tries++">+</button>
-                                        </div>
-                                    </div>
-                                </div>
+                  <div class="filter-item">
+                    <label class="filter-label">&nbsp;</label>
+                    <button
+                      v-if="hasActiveFilters"
+                      @click="resetFilters"
+                      class="btn-reset"
+                    >
+                      Clear filters
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </section>
 
-                                <div class="form-group full-width">
-                                    <label>Style</label>
-                                    <div class="chip-group">
-                                        <button type="button"
-                                            v-for="style in ['Dyno', 'Overhang', 'Roof', 'Slab', 'Vertical']"
-                                            :key="style" class="chip-btn"
-                                            :class="{ active: newProblem.style === style }"
-                                            @click="newProblem.style = style">
-                                            {{ style }}
-                                        </button>
-                                    </div>
-                                </div>
+            <!-- Problem Display & Session History Grid -->
+            <div class="dashboard-grid">
+              <!-- Logged Climbs -->
+              <section id="problem-list" class="problem-grid">
+                <h2>Logged Problems</h2>
+                <div class="problem-container">
+                  <div v-if="problems.length === 0" class="empty-state">
+                    <p>You have no climbs logged yet.</p>
+                  </div>
 
-                                <div class="form-group full-width">
-                                    <label>Status</label>
-                                    <div class="chip-group">
-                                        <button type="button" v-for="status in ['Send', 'Project']" :key="status"
-                                            class="chip-btn" :class="{ active: newProblem.status === status }"
-                                            @click="newProblem.status = status">
-                                            {{ status }}
-                                        </button>
-                                    </div>
-                                </div>
+                  <div
+                    v-else-if="filteredProblems.length === 0"
+                    class="empty-state"
+                  >
+                    <p>No climbs found for your filters.</p>
+                    <button
+                      @click="resetFilters"
+                      class="btn-reset"
+                      style="margin-top: 0.75rem"
+                    >
+                      Clear filters
+                    </button>
+                  </div>
 
-                                <div class="form-group">
-                                    <label>Notes (optional)</label>
-                                    <input type="text" v-model="newProblem.notes" placeholder="e.g. Heel hook was key!"
-                                        class="form-input">
-                                </div>
-
-                                <div class="form-actions"
-                                    style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 1rem;">
-                                    <template v-if="editingId">
-                                        <button type="button" @click="markAsReset" class="btn-reset" style="flex: 1;">
-                                            Mark as Reset
-                                        </button>
-                                        <button type="button" @click="resetForm" class="btn-reset" style="flex: 1;">
-                                            Cancel
-                                        </button>
-                                    </template>
-                                    <button type="submit" class="btn-submit" style="width: 100%; margin-top: 0.25rem;">
-                                        {{ editingId ? 'Update Problem' : 'Log Problem' }}
-                                    </button>
-                                </div>
-                            </form>
+                  <div v-else class="problem-cards-list">
+                    <div
+                      v-for="problem in filteredProblems"
+                      :key="problem.id"
+                      class="problem-card"
+                      @click="editProblem(problem)"
+                    >
+                      <div class="card-header">
+                        <div class="card-tags">
+                          <span class="badge badge-grade"
+                            >{{ problem.grade }}</span
+                          >
+                          <span
+                            class="badge"
+                            :class="getDisplayStatus(problem).toLowerCase()"
+                          >
+                            {{ getDisplayStatus(problem) }}
+                          </span>
+                          <span class="badge badge-style"
+                            >{{ problem.style }}</span
+                          >
                         </div>
-                    </div>
+                        <button
+                          @click.stop="deleteProblem(problem.id)"
+                          class="btn-delete"
+                          title="Delete problem"
+                        >
+                          &times;
+                        </button>
+                      </div>
 
-                    <!-- Logged problems during session -->
-                    <div style="margin-top: 1.5rem;">
-                        <h2>Session Problems({{ sessionProblems.length }})</h2>
-                        <div class="user-container">
-                            <div v-if="sessionProblems.length === 0" class="empty-state">
-                                <p>No climbs logged in this session yet.</p>
-                            </div>
-                            <div v-else class="problem-cards-list">
-                                <div v-for="problem in sessionProblems" :key="problem.id" class="problem-card"
-                                    @click="editProblem(problem)">
-                                    <div class="card-header">
-                                        <div class="card-tags">
-                                            <span class="badge badge-grade">{{ problem.grade }}</span>
-                                            <span class="badge" :class="getDisplayStatus(problem).toLowerCase()">
-                                                {{ getDisplayStatus(problem) }}
-                                            </span>
-                                            <span class="badge badge-style">{{ problem.style }}</span>
-                                        </div>
-                                        <button @click.stop="deleteProblem(problem.id)" class="btn-delete"
-                                            title="Delete problem">&times;</button>
-                                    </div>
-                                    <div class="card-body">
-                                        <p class="meta-info">
-                                            <span>{{ problem.tries }} {{ problem.tries === 1 ? 'try' : 'tries' }}</span>
-                                            <template v-if="problem.notes">
-                                                <span class="meta-bullet">&bull;</span>
-                                                <span class="problem-notes">"{{ problem.notes }}"</span>
-                                            </template>
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- DASHBOARD (no active session) -->
-                <template v-else>
-
-                    <!-- Hero section -->
-                    <section id="hero" class="hero-container">
-                        <h1>
-                            <span class="brand-badge">[CRUX]</span><br>
-                            LOG YOUR SENDS. <br>
-                            TRACK YOUR PROJECTS.
-                        </h1>
-                        <p class="tagline">
-                            Data-driven climbing.<br>
-                            Because <em>"I almost had it"</em> doesn't count on the log.
+                      <div class="card-body">
+                        <h3 class="gym-title">
+                          {{ problem.gym }} - {{ problem.date }}
+                        </h3>
+                        <p class="meta-info">
+                          <span
+                            >{{ problem.tries }} {{ problem.tries === 1 ? 'try'
+                            : 'tries' }}</span
+                          >
+                          <template v-if="problem.notes">
+                            <span class="meta-bullet">&bull;</span>
+                            <span class="problem-notes"
+                              >"{{ problem.notes }}"</span
+                            >
+                          </template>
                         </p>
-
-                        <div class="stats-container">
-                            <div class="stats-card">
-                                <span class="stat-number">{{ totalFlashes }}</span>
-                                <span class="stat-label">TOTAL FLASHES</span>
-                            </div>
-                            <div class="stats-card">
-                                <span class="stat-number">{{ totalSends }}</span>
-                                <span class="stat-label">TOTAL SENDS</span>
-                            </div>
-                            <div class="stats-card">
-                                <span class="stat-number">{{ activeProjects }}</span>
-                                <span class="stat-label">ACTIVE PROJECTS</span>
-                            </div>
-                        </div>
-                    </section>
-
-                    <!-- Start Session Card -->
-                    <section id="session-setup" class="user-grid">
-                        <h2>Start new session</h2>
-                        <div class="user-container">
-                            <form @submit.prevent="startSession" class="climb-form">
-                                <div class="form-row">
-                                    <div class="form-group">
-                                        <label>Gym</label>
-                                        <input type="text" v-model="sessionForm.gym" placeholder="e.g. Backa Boulder"
-                                            required class="form-input">
-                                    </div>
-
-                                    <div class="form-group">
-                                        <label>Date</label>
-                                        <input type="date" v-model="sessionForm.date" required class="form-input">
-                                    </div>
-                                </div>
-                                <div class="form-actions" style="margin-top: 1rem">
-                                    <button type="submit" class="btn-submit" style="width: 100%">
-                                        Start Session
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    </section>
-
-                    <!-- Filters -->
-                    <section id="filters" class="filter-grid">
-                        <div class="filter-container">
-                            <div class="filter-group">
-                                <div class="filter-item">
-                                    <label class="filter-label">Status</label>
-                                    <select v-model="selectedStatus" class="filter-select">
-                                        <option value="">All</option>
-                                        <option value="FLASH">Flashes</option>
-                                        <option value="PROJECT">Projects</option>
-                                        <option value="RESET">Resets</option>
-                                        <option value="SEND">Sends</option>
-                                    </select>
-                                </div>
-
-                                <div class="filter-item">
-                                    <label class="filter-label">Grade</label>
-                                    <select v-model="selectedGrade" class="filter-select">
-                                        <option value="">All</option>
-                                        <option v-for="g in ['4','5','6A','6B','6C','7A','7B','7C','8A']" :key="g"
-                                            :value="g">{{ g }}</option>
-                                    </select>
-                                </div>
-
-                                <div class="filter-item">
-                                    <label class="filter-label">Style</label>
-                                    <select v-model="selectedStyle" class="filter-select">
-                                        <option value="">All</option>
-                                        <option v-for="s in ['DYNO','OVERHANG','ROOF','SLAB','VERTICAL']" :key="s"
-                                            :value="s">{{ s }}</option>
-                                    </select>
-                                </div>
-
-                                <div class="filter-item">
-                                    <label class="filter-label">&nbsp;</label>
-                                    <button v-if="hasActiveFilters" @click="resetFilters" class="btn-reset">
-                                        Clear filters
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </section>
-
-                    <!-- Problem Display & Session History Grid -->
-                    <div class="dashboard-grid">
-                        <!-- Logged Climbs -->
-                        <section id="problem-list" class="problem-grid">
-                            <h2>Logged Problems</h2>
-                            <div class="problem-container">
-
-                                <div v-if="problems.length === 0" class="empty-state">
-                                    <p>You have no climbs logged yet.</p>
-                                </div>
-
-                                <div v-else-if="filteredProblems.length === 0" class="empty-state">
-                                    <p>No climbs found for your filters.</p>
-                                    <button @click="resetFilters" class="btn-reset" style="margin-top: 0.75rem;">
-                                        Clear filters
-                                    </button>
-                                </div>
-
-                                <div v-else class="problem-cards-list">
-                                    <div v-for="problem in filteredProblems" :key="problem.id" class="problem-card"
-                                        @click="editProblem(problem)">
-                                        <div class="card-header">
-                                            <div class="card-tags">
-                                                <span class="badge badge-grade">{{ problem.grade }}</span>
-                                                <span class="badge" :class="getDisplayStatus(problem).toLowerCase()">
-                                                    {{ getDisplayStatus(problem) }}
-                                                </span>
-                                                <span class="badge badge-style">{{ problem.style }}</span>
-                                            </div>
-                                            <button @click.stop="deleteProblem(problem.id)" class="btn-delete"
-                                                title="Delete problem">&times;
-                                            </button>
-                                        </div>
-
-                                        <div class="card-body">
-                                            <h3 class="gym-title">{{ problem.gym }} - {{ problem.date }}</h3>
-                                            <p class="meta-info">
-                                                <span>{{ problem.tries }} {{ problem.tries === 1 ? 'try' : 'tries'
-                                                    }}</span>
-                                                <template v-if="problem.notes">
-                                                    <span class="meta-bullet">&bull;</span>
-                                                    <span class="problem-notes">"{{ problem.notes }}"</span>
-                                                </template>
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </section>
-
-                        <!-- Logged sessions -->
-                        <section id="logged-sessions" class="problem-grid">
-                            <h2>Logged sessions</h2>
-                            <div class="problem-container">
-
-                                <div v-if="sessions.length === 0" class="empty-state">
-                                    <p>You have no logged sessions yet.</p>
-                                </div>
-
-                                <div v-else class="problem-cards-list">
-                                    <div v-for="session in sessions" :key="session.id" class="problem-card">
-
-                                        <div class="card-header">
-                                            <div class="card-tags">
-                                                <span class="badge badge-grade">
-                                                    {{ getProblemCountText(session) }}
-                                                </span>
-                                                <span class="badge send">
-                                                    {{ getSessionSendText(session) }}
-                                                </span>
-                                            </div>
-                                            <button @click.stop="deleteSession(session.id)" class="btn-delete"
-                                                title="Delete session">&times;
-                                            </button>
-                                        </div>
-
-                                        <div class="card-body">
-                                            <h3 class="gym-title">{{ session.gym }} - {{ session.date }}</h3>
-                                            <p class="meta-info">
-                                                <span>Status: <strong>{{ session.status || 'Finished' }}</strong></span>
-                                            </p>
-                                        </div>
-
-                                        <div style="margin-top: 0.75rem; border-top: 1px solid var(--border-line-color); padding-top: 0.75rem;">
-                                            <button type="button" @click="addProblemToSession(session)" class="btn-add-forgotten" style="width: 100%; font-size: 0.75rem;">
-                                                Add forgotten climb?
-                                            </button>
-                                        </div>
-
-
-
-                                    </div>
-                                </div>
-
-                            </div>
-                        </section>
-
+                      </div>
                     </div>
+                  </div>
+                </div>
+              </section>
 
-                    <!-- User Profile -->
-                    <section id="user-profile" class="user-grid">
-                        <h2>{{ !isEditingProfile ? 'My profile' : 'Edit Profile'}}</h2>
-                        <div class="user-container">
-                            <div v-if="!isEditingProfile" class="profile-card">
-                                <div class="profile-details">
-                                    <div class="profile-item">
-                                        <span class="label">Username</span>
-                                        <strong>{{ user.name || 'Demo Climber' }}</strong>
-                                    </div>
-                                    <div class="profile-item">
-                                        <span class="label">Favorite Style</span>
-                                        <strong>{{ user.favoriteStyle || 'Not set' }}</strong>
-                                    </div>
-                                    <div class="profile-item">
-                                        <span class="label">Unfinished Business (Resets)</span>
-                                        <strong>{{ totalResets }}x</strong>
-                                    </div>
-                                    <div class="profile-item">
-                                        <span class="label">Storage Mode</span>
-                                        <span class="value" :style="{ color: user.saveData ? '#10b981' : '#f59e0b' }">
-                                            {{ user.saveData ? '✓ Local Storage' : '⚠ Session Only' }}
-                                        </span>
-                                    </div>
-                                </div>
-                                <div class="form-actions" style="margin-top: 1.25rem;">
-                                    <button type="button" @click="isEditingProfile = true" class="btn-submit"
-                                        style="width: 100%;">
-                                        Edit Profile
-                                    </button>
-                                </div>
-                            </div>
+              <!-- Logged sessions -->
+              <section id="logged-sessions" class="problem-grid">
+                <h2>Logged sessions</h2>
+                <div class="problem-container">
+                  <div v-if="sessions.length === 0" class="empty-state">
+                    <p>You have no logged sessions yet.</p>
+                  </div>
 
-                            <form v-else @submit.prevent="updateProfile" class="climb-form">
-                                <div class="form-row">
-                                    <div class="form-group">
-                                        <label>Username</label>
-                                        <input type="text" v-model="user.name" placeholder="..." class="form-input">
-                                    </div>
-
-                                    <div class="form-group">
-                                        <label>Favorite Style</label>
-                                        <select v-model="user.favoriteStyle" class="form-select">
-                                            <option value="">None selected</option>
-                                            <option value="Dyno">Dyno</option>
-                                            <option value="Overhang">Overhang</option>
-                                            <option value="Roof">Roof</option>
-                                            <option value="Slab">Slab</option>
-                                            <option value="Vertical">Vertical</option>
-                                        </select>
-                                    </div>
-                                </div>
-
-                                <div class="form-group full-width">
-                                    <label>Data Storage Settings</label>
-                                    <div class="toggle-control" style="margin-top: 0.4rem;">
-                                        <label
-                                            style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-                                            <input type="checkbox" v-model="user.saveData" @change="handleStorage">
-                                            <span style="font-size: 0.75rem;">Save climbing data locally
-                                                (localStorage)</span>
-                                        </label>
-                                    </div>
-                                </div>
-
-                                <div class="form-actions">
-                                    <button type="button" @click="isEditingProfile = false"
-                                        class="btn-reset">Cancel</button>
-                                    <button type="submit" class="btn-submit" style="flex: 1;">Save Changes</button>
-                                </div>
-                            </form>
+                  <div v-else class="problem-cards-list">
+                    <div
+                      v-for="session in sessions"
+                      :key="session.id"
+                      class="problem-card"
+                    >
+                      <div class="card-header">
+                        <div class="card-tags">
+                          <span class="badge badge-grade">
+                            {{ getProblemCountText(session) }}
+                          </span>
+                          <span class="badge send">
+                            {{ getSessionSendText(session) }}
+                          </span>
                         </div>
-                    </section>
-                </template>
+                        <button
+                          @click.stop="deleteSession(session.id)"
+                          class="btn-delete"
+                          title="Delete session"
+                        >
+                          &times;
+                        </button>
+                      </div>
 
-                <!-- Logout/End Session button -->
-                <div class="action-container" style="margin-top: 0.5rem;">
-                    <button v-if="!activeSession" @click="logout" class="btn-logout">
-                        Log Out
+                      <div class="card-body">
+                        <h3 class="gym-title">
+                          {{ session.gym }} - {{ session.date }}
+                        </h3>
+                        <p class="meta-info">
+                          <!-- <span>Status: <strong>{{ session.status || 'Finished' }}</strong></span> -->
+                        </p>
+                      </div>
+
+                      <div
+                        style="
+                          margin-top: 0.75rem;
+                          border-top: 1px solid var(--border-line-color);
+                          padding-top: 0.75rem;
+                        "
+                      >
+                        <button
+                          type="button"
+                          @click="addProblemToSession(session)"
+                          class="btn-add-forgotten"
+                          style="width: 100%; font-size: 0.75rem"
+                        >
+                          Add forgotten climb?
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </section>
+            </div>
+
+            <!-- User Profile -->
+            <section id="user-profile" class="user-grid">
+              <h2>{{ !isEditingProfile ? 'My profile' : 'Edit Profile'}}</h2>
+              <div class="user-container">
+                <div v-if="!isEditingProfile" class="profile-card">
+                  <div class="profile-details">
+                    <div class="profile-item">
+                      <span class="label">Username</span>
+                      <strong>{{ user.name || 'Demo Climber' }}</strong>
+                    </div>
+                    <div class="profile-item">
+                      <span class="label">Favorite Style</span>
+                      <strong>{{ user.favoriteStyle || 'Not set' }}</strong>
+                    </div>
+                    <div class="profile-item">
+                      <span class="label">Unfinished Business (Resets)</span>
+                      <strong>{{ totalResets }}x</strong>
+                    </div>
+                    <div class="profile-item">
+                      <span class="label">Storage Mode</span>
+                      <span
+                        class="value"
+                        :style="{ color: user.saveData ? '#10b981' : '#f59e0b' }"
+                      >
+                        {{ user.saveData ? '✓ Local Storage' : '⚠ Session Only'
+                        }}
+                      </span>
+                    </div>
+                  </div>
+                  <div class="form-actions" style="margin-top: 1.25rem">
+                    <button
+                      type="button"
+                      @click="isEditingProfile = true"
+                      class="btn-submit"
+                      style="width: 100%"
+                    >
+                      Edit Profile
                     </button>
-                    <button v-else @click="endSession" class="btn-logout"
-                        style="color: #ef4444; border-color: #ef4444;">
-                        End Session
-                    </button>
+                  </div>
                 </div>
 
-                <!-- Modal view to edit earlier logged climbs or add forgotten climb-->
-                <div v-if="(editingId || isAddingToSession) && !activeSession" class="modal-overlay" @click.self="resetForm">
-                    <div class="modal-content user-container">
-                        <div
-                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                            <h2>{{ editingId ? 'Edit Climb' : 'Add Climb' }}</h2>
-                            <button type="button" @click="resetForm" class="btn-delete" style="font-size: 1.5rem;">&times;</button>
-                        </div>
-
-                        <form @submit.prevent="saveProblem" class="climb-form">
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label>Gym</label>
-                                    <input type="text" v-model="newProblem.gym" class="form-input" required>
-                                </div>
-                                <div class="form-group">
-                                    <label>Date</label>
-                                    <input type="date" v-model="newProblem.date" class="form-input" required>
-                                </div>
-                            </div>
-
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label>Grade</label>
-                                    <select v-model="newProblem.grade" required class="form-select">
-                                        <option v-for="g in ['4','5','6A','6B','6C','7A','7B','7C','8A']" :key="g"
-                                            :value="g">{{ g }}</option>
-                                    </select>
-                                </div>
-                                <div class="form-group">
-                                    <label>Attempts</label>
-                                    <div class="attempts-stepper">
-                                        <button type="button" class="btn-stepper"
-                                            @click="newProblem.tries = Math.max(1, newProblem.tries -1)"
-                                            :disabled="newProblem.tries <= 1">-</button>
-
-                                        <span class="attempts-count-box">{{ newProblem.tries }}</span>
-
-                                        <button type="button" class="btn-stepper" @click="newProblem.tries++">+</button>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="form-group full-width">
-                                <label>Style</label>
-                                <div class="chip-group">
-                                    <button type="button"
-                                        v-for="style in ['Dyno', 'Overhang', 'Roof', 'Slab', 'Vertical']" :key="style"
-                                        class="chip-btn" :class="{ active: newProblem.style === style }"
-                                        @click="newProblem.style = style">
-                                        {{ style }}
-                                    </button>
-                                </div>
-                            </div>
-
-                            <div class="form-group full-width">
-                                <label>Status</label>
-                                <div class="chip-group">
-                                    <button type="button" v-for="status in ['Send', 'Project', 'Reset']" :key="status"
-                                        class="chip-btn" :class="{ active: newProblem.status === status }"
-                                        @click="newProblem.status = status">
-                                        {{ status }}
-                                    </button>
-                                </div>
-                            </div>
-
-                            <div class="form-group">
-                                <label>Notes</label>
-                                <input type="text" v-model="newProblem.notes" class="form-input">
-                            </div>
-
-                            <div class="form-actions"
-                                style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 1.25rem;">
-                                <button v-if="editingId" type="button" @click="deleteProblem(editingId)" class="btn-reset"style="flex: 1; color: #ef4444; border-color: #ef4444;">
-                                    Delete
-                                </button>
-                                <button type="button" @click="resetForm" class="btn-reset" :style="{ flex: editingId ? '1' : '1 0 100%' }">
-                                    Cancel
-                                </button>
-                                <button type="submit" class="btn-submit" style="width: 100%; margin-top: 0.25rem;">
-                                    {{ editingId ? 'Save Changes' : 'Log Climb' }}
-                                </button>
-                            </div>
-
-                        </form>
+                <form v-else @submit.prevent="updateProfile" class="climb-form">
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label>Username</label>
+                      <input
+                        type="text"
+                        v-model="user.name"
+                        placeholder="..."
+                        class="form-input"
+                      />
                     </div>
-                </div>
-            </template>
-        </main>
 
-     <footer>
+                    <div class="form-group">
+                      <label>Favorite Style</label>
+                      <select v-model="user.favoriteStyle" class="form-select">
+                        <option value="">None selected</option>
+                        <option value="Dyno">Dyno</option>
+                        <option value="Overhang">Overhang</option>
+                        <option value="Roof">Roof</option>
+                        <option value="Slab">Slab</option>
+                        <option value="Vertical">Vertical</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div class="form-group full-width">
+                    <label>Data Storage Settings</label>
+                    <div class="toggle-control" style="margin-top: 0.4rem">
+                      <label
+                        style="
+                          display: flex;
+                          align-items: center;
+                          gap: 0.5rem;
+                          cursor: pointer;
+                        "
+                      >
+                        <input
+                          type="checkbox"
+                          v-model="user.saveData"
+                          @change="handleStorage"
+                        />
+                        <span style="font-size: 0.75rem"
+                          >Save climbing data locally (localStorage)</span
+                        >
+                      </label>
+                    </div>
+                  </div>
+
+                  <div class="form-actions">
+                    <button
+                      type="button"
+                      @click="isEditingProfile = false"
+                      class="btn-reset"
+                    >
+                      Cancel
+                    </button>
+                    <button type="submit" class="btn-submit" style="flex: 1">
+                      Save Changes
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </section>
+          </template>
+
+          <!-- Logout/End Session button -->
+          <div class="action-container" style="margin-top: 0.5rem">
+            <button v-if="!activeSession" @click="logout" class="btn-logout">
+              Log Out
+            </button>
+            <button
+              v-else
+              @click="endSession"
+              class="btn-logout"
+              style="color: #ef4444; border-color: #ef4444"
+            >
+              End Session
+            </button>
+          </div>
+
+          <!-- Modal view to edit earlier logged climbs or add forgotten climb-->
+          <div
+            v-if="(editingId || isAddingToSession) && !activeSession"
+            class="modal-overlay"
+            @click.self="resetForm"
+          >
+            <div class="modal-content user-container">
+              <div
+                style="
+                  display: flex;
+                  justify-content: space-between;
+                  align-items: center;
+                  margin-bottom: 1rem;
+                "
+              >
+                <h2>{{ editingId ? 'Edit Climb' : 'Add Climb' }}</h2>
+                <button
+                  type="button"
+                  @click="resetForm"
+                  class="btn-delete"
+                  style="font-size: 1.5rem"
+                >
+                  &times;
+                </button>
+              </div>
+
+              <form @submit.prevent="saveProblem" class="climb-form">
+                <div class="form-row">
+                  <div class="form-group">
+                    <label>Gym</label>
+                    <input
+                      type="text"
+                      v-model="newProblem.gym"
+                      class="form-input"
+                      required
+                    />
+                  </div>
+                  <div class="form-group">
+                    <label>Date</label>
+                    <input
+                      type="date"
+                      v-model="newProblem.date"
+                      class="form-input"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div class="form-row">
+                  <div class="form-group">
+                    <label>Grade</label>
+                    <select
+                      v-model="newProblem.grade"
+                      required
+                      class="form-select"
+                    >
+                      <option
+                        v-for="g in ['4','5','6A','6B','6C','7A','7B','7C','8A']"
+                        :key="g"
+                        :value="g"
+                      >
+                        {{ g }}
+                      </option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label>Attempts</label>
+                    <div class="attempts-stepper">
+                      <button
+                        type="button"
+                        class="btn-stepper"
+                        @click="newProblem.tries = Math.max(1, newProblem.tries -1)"
+                        :disabled="newProblem.tries <= 1"
+                      >
+                        -
+                      </button>
+
+                      <span class="attempts-count-box"
+                        >{{ newProblem.tries }}</span
+                      >
+
+                      <button
+                        type="button"
+                        class="btn-stepper"
+                        @click="newProblem.tries++"
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="form-group full-width">
+                  <label>Style</label>
+                  <div class="chip-group">
+                    <button
+                      type="button"
+                      v-for="style in ['Dyno', 'Overhang', 'Roof', 'Slab', 'Vertical']"
+                      :key="style"
+                      class="chip-btn"
+                      :class="{ active: newProblem.style === style }"
+                      @click="newProblem.style = style"
+                    >
+                      {{ style }}
+                    </button>
+                  </div>
+                </div>
+
+                <div class="form-group full-width">
+                  <label>Status</label>
+                  <div class="chip-group">
+                    <button
+                      type="button"
+                      v-for="status in ['Send', 'Project', 'Reset']"
+                      :key="status"
+                      class="chip-btn"
+                      :class="{ active: newProblem.status === status }"
+                      @click="newProblem.status = status"
+                    >
+                      {{ status }}
+                    </button>
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label>Notes</label>
+                  <input
+                    type="text"
+                    v-model="newProblem.notes"
+                    class="form-input"
+                  />
+                </div>
+
+                <div
+                  class="form-actions"
+                  style="
+                    display: flex;
+                    gap: 0.5rem;
+                    flex-wrap: wrap;
+                    margin-top: 1.25rem;
+                  "
+                >
+                  <button
+                    v-if="editingId"
+                    type="button"
+                    @click="deleteProblem(editingId)"
+                    class="btn-reset"
+                    style="flex: 1; color: #ef4444; border-color: #ef4444"
+                  >
+                    Delete
+                  </button>
+                  <button
+                    type="button"
+                    @click="resetForm"
+                    class="btn-reset"
+                    :style="{ flex: editingId ? '1' : '1 0 100%' }"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    class="btn-submit"
+                    style="width: 100%; margin-top: 0.25rem"
+                  >
+                    {{ editingId ? 'Save Changes' : 'Log Climb' }}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </template>
+      </main>
+
+      <footer>
         <div class="footer-brand">[CRUX]</div>
+        <p class="footer-tagline">Bouldering Tracker</p>
         <p>&copy; 2026. All rights reserved.</p>
-    </footer>
-
+      </footer>
     </div>
 
     <script src="app.js"></script>
-</body>
-
+  </body>
 </html>

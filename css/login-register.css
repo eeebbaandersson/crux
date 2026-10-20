@@ -30,7 +30,7 @@
 }
 
 #auth-section::before {
-content: '';
+    content: '';
     position: absolute;
     inset: 0;
     background-image: url('../images/boulder-wall2.jpg');
@@ -42,7 +42,7 @@ content: '';
 } 
 
 #auth-section::after {
- content: '';
+    content: '';
     position: absolute;
     inset: 0;
     background: radial-gradient(circle at center, rgba(18, 19, 21, 0.2) 10%, var(--bg-main) 80%);
@@ -122,14 +122,12 @@ footer {
 }
 
 .autForm-container {
- width: 100%;
+    width: 100%;
     max-width: 440px;
     margin: 1rem auto 0 auto;
-    
     background: rgba(255, 255, 255, 0.02);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    
     border: 1px solid var(--border-color-card);
     border-radius: var(--border-radius-lg);
     padding: 1.5rem 2.5rem;
@@ -145,6 +143,14 @@ footer {
     letter-spacing: 1.5px;
     text-align: center;
     text-transform: uppercase;
+}
+
+.auth-desktop-split {
+    width: 100%;
+    max-width: 440px; 
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
 }
 
 .climb-form {
@@ -238,6 +244,7 @@ footer {
     letter-spacing: 1px;
     cursor: pointer;
     transition: all 0.2s ease;
+    margin-bottom: 0.25rem;
 }
 
 .btn-demo:hover {
@@ -252,6 +259,103 @@ footer {
     color: rgba(255, 255, 255, 0.65);
 }
 
-/* Tablet */
+/* DESKTOP / TABLET SPLIT-SCREEN LAYOUT */
+.auth-image-pane {
+    display: none;
+}
+
 @media screen and (min-width: 768px) {
+    #auth-section::before,
+    #auth-section::after {
+        display: none;
+    }
+
+    #auth-section {
+        min-height: calc(100vh - 100px);
+        padding: 1.5rem 1rem;
+        background-color: var(--bg-main);
+    }
+
+    .auth-desktop-split {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        width: 100%;
+        max-width: 880px;      
+        min-height: 480px;     
+        background-color: #16181a;
+        border: 1px solid var(--border-color-card);
+        border-radius: var(--border-radius-lg);
+        overflow: hidden;
+        position: relative;
+        z-index: 2;
+        margin-top: -1.5rem; 
+    }
+
+    .auth-image-pane {
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        padding: 3rem;        
+        position: relative;
+        background-image: url('../images/boulder-wall2.jpg');
+        background-size: cover;
+        background-position: center;
+        filter: grayscale(100%) contrast(110%) brightness(0.5);
+        transform: scale(1.09); 
+    }
+
+    .auth-image-pane::before {
+      content: '';
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(to top, rgba(18, 19, 21, 0.6) 0%, rgba(18, 19, 21, 0.05) 100%);
+        z-index: 1;
+    }
+
+    .auth-image-content h1 {
+        font-size: 1.8rem;
+        font-weight: 800;
+        color: var(--text-primary);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-top: 0.25rem;
+    }
+
+    .auth-image-content p {
+        font-size: 0.85rem;
+        color: rgba(255, 255, 255, 0.6);
+        margin-top: 0.4rem;
+    }
+
+    .auth-content-pane {
+        padding: 3rem 3.5rem;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .auth-content-pane .toggle-container {
+        max-width: 100%;
+    }
+
+    .auth-content-pane .autForm-container {
+        border: none;
+        background: transparent;
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+        padding: 0;
+        margin-top: 1rem;
+        margin-bottom: 0.5rem;
+        width: 100%;
+    }
+
+    .auth-content-pane .climb-form {
+        max-width: 100%;  
+    }
+
+    .auth-content-pane .demo-section {
+        margin-top: 2rem;
+        width: 100%;  
+    }
 }
