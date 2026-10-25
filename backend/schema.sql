@@ -3,7 +3,7 @@ DROP TABLE IF EXISTS problems;
 DROP TABLE IF EXISTS sessions;
 DROP TABLE IF EXISTS users;
 
--- Future table for users --
+-- Users --
 CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY,
     username VARCHAR(255) NOT NULL UNIQUE,
@@ -33,6 +33,7 @@ CREATE TABLE IF NOT EXISTS problems (
     tries INT DEFAULT 1 NOT NULL,
     current_status VARCHAR(50) DEFAULT 'Send' NOT NULL,
     notes TEXT NULL,
+    image_url VARCHAR(500) NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
