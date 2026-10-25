@@ -3,6 +3,8 @@ const express = require('express');
 const cors = require('cors');
 const db = require('./db');
 
+const { ensureBucketExists } = require('./config/s3');
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -38,6 +40,7 @@ app.get('/api/health', async (req, res) => {
 });
 
 
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
     console.log(`🚀 Server running on http://localhost:${PORT}`);
+    await ensureBucketExists();
 });

@@ -1,4 +1,4 @@
-const { S3Client } = require('@aws-sdk/client-s3');
+const { S3Client, HeadBucketCommand, CreateBucketCommand } = require('@aws-sdk/client-s3');
 
 // Create configured S3Client instance
 const s3Client = new S3Client({
@@ -12,4 +12,24 @@ const s3Client = new S3Client({
 
 });
 
-module.exports = { s3Client };
+// Verify that bucket exists in MinIO, otherwise create it
+const ensureBucketExists = async () => {
+    const bucketName = process.env.S3_BUCKET_NAME;
+    try {
+        await s3Client.send(new HeadBucketCommand({ Bucket: bucketName}));
+        console.log(`S3 Bucket "${bucketName}" already exists.`);
+    } catch (error) {
+        // (404/NotFound) --> create bucket
+        try {
+            console.log(`Bucket "${bucketName}" not found. Creating...`);
+            await s3Client.send(new CreateBucketCommand({ Bucket: bucketName}));
+            console.log(`S3 Bucket "${bucketName}" created successfully.`);
+        } catch (createError) {
+            console.error('Could not create S3 bucket:', createError.message);
+
+        }
+    }
+
+}
+
+module.exports = { s3Client, ensureBucketExists };
