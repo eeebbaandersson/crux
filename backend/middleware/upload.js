@@ -24,13 +24,13 @@ const processImage = async (req, res, next) => {
         const filename = `problem-${Date.now()}.webp`;
 
         // Optimize and convert image
-        const proccessedBuffer = await sharp(req.file.buffer)
+        const processedBuffer = await sharp(req.file.buffer)
         .resize({ width: 1200, withoutEnlargement: true }) // Scale down larger images, keep smaller ones
         .webp({ quality: 80 }) // convert to webp with 80% quality
         .toBuffer();
 
-        req.proccessedFile = {
-            buffer: proccessedBuffer,
+        req.processedFile = {
+            buffer: processedBuffer,
             filename: filename,
             mimetype: 'image/webp'
         };

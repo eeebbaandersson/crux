@@ -128,11 +128,23 @@ async function deleteProblem(id, context) {
     return rowCount > 0;
 }
 
+const updateProblemImage = async (problemId, fileUrl) => {
+    const query = `
+        UPDATE problems
+        SET image_url = $1, updated_at = CURRENT_TIMESTAMP
+        WHERE id = $2
+        RETURNING *;
+    `;
+    const { rows } = await db.query(query, [fileUrl, problemId]);
+    return rows[0] || null;
+};
+
 module.exports = {
     getProblemsByUserId,
     getProblemsBySessionId,
     getProblemById,
     logNewProblem,
     updateProblem,
-    deleteProblem
+    deleteProblem,
+    updateProblemImage
 };

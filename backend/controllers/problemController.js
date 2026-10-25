@@ -1,4 +1,6 @@
 const problemService = require('../services/problemService');
+const { s3Client } = require('../config/s3.js');
+const { PutObjectCommand } = require('@aws-sdk/client-s3');
 
 exports.getProblems = async (req, res) => {
     try {
@@ -92,5 +94,44 @@ exports.deleteProblem = async (req, res) => {
         return res.json({ message: 'Problem has been deleted.' });
     } catch (error) {
         return res.status(500).json({ error: error.message });
+    }
+};
+
+exports.uploadProblemImage = async (req, res) => {
+    try {
+        if (!req.processedFile) {
+            return res.status(400).json({ status: 'error', message: 'No image added or invalid format provided.'});
+        }
+
+        const { id } = req.params; // catches :id from the URL
+        const { buffer, filename, mimetype } = req.processedFile;
+
+        // Upload image to MinIO / S3
+        const uploadParams = {
+            Bucket: process.env.S3_BUCKET_NAME,
+            Key: filename,
+            Body: buffer,
+            ContentType: mimetype,
+        };
+
+        await s3Client.send(new PutObjectCommand(uploadParams));
+
+        // Create public URL
+        const fileUrl = `${process.env.S3_ENDPOINT}/${process.env.S3_BUCKET_NAME}/${filename}`;
+
+        const updateProblem = await problemService.updateProblemImage(id, fileUrl);
+
+        if (!updateProblem) {
+            return res.status(404).json({ status: 'error', message: 'Could not find bouldering problem.'});
+        }
+
+        res.status(200).json({
+            status: 'success',
+            message: 'Image has been uploaded and saved!',
+            problem: updateProblem
+        });
+    } catch (error) {
+        console.error('Error during image upload', error);
+        res.status(500).json({ status: 'error', message: 'Could not upload current image: ' + error.message});
     }
 };
