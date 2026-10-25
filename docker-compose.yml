@@ -2,7 +2,6 @@ services:
   db:
     image: postgres:15-alpine
     container_name: bouldering_db
-    restart: always
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: secret
@@ -12,5 +11,19 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
 
+  minio:
+    image: minio/minio:latest
+    container_name: minio
+    environment:
+      MINIO_ROOT_USER: user
+      MINIO_ROOT_PASSWORD: secretpassword
+    ports:
+      - "9000:9000"
+      - "9001:9001"  
+    command: server /data --console-address ":9001"  
+    volumes:
+      - minio_data:/data
+
 volumes:
- pgdata:          
+  pgdata:
+  minio_data:
