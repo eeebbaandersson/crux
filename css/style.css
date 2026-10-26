@@ -24,7 +24,7 @@ html {
 }
 
 body {
-   width: 100%;
+    width: 100%;
     min-height: 100vh;
     background-color: var(--bg-main);
     color: var(--text-primary);
@@ -42,6 +42,8 @@ section {
 .form-group label,
 .form-input[type="date"],
 .form-input[type="number"],
+.card-date,
+.tries-badge,
 footer { 
     font-family: 'JetBrains Mono', monospace;
 }
@@ -67,7 +69,6 @@ h2 {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    
 }
 
 .brand-badge {
@@ -79,14 +80,13 @@ h2 {
 }
 
 .hero-container h1 {
-   font-size: 2.2rem;
+    font-size: 2.2rem;
     font-weight: 800;
     line-height: 1.15;
     text-transform: uppercase;
     color: var(--text-primary);
     margin-bottom: 0.5rem;
 }
-
 
 .hero-container p {
     opacity: 0.8;
@@ -279,7 +279,6 @@ h2 {
     margin: 0;
 }
 
-
 .problem-container, 
 .form-container, 
 .user-container {
@@ -330,33 +329,139 @@ h2 {
     background: rgba(255, 255, 255, 0.4);
 }
 
+/* --- PROBLEM- OCH SESSION-KORT --- */
 .problem-card {
     background-color: rgba(255, 255, 255, 0.015);
     border: 1px solid var(--border-color-card);
     border-radius: var(--border-radius-inner);
-    padding: 1.25rem;
+    padding: 1rem 1.15rem;
     display: flex;
     flex-direction: column;
-    gap: 0.9rem;
+    gap: 0.75rem;
     cursor: pointer;
+    transition: all 0.2s ease;
 }
 
 .problem-card:hover {
-    border-color: rgba(255, 255, 255, 0.12);
+    background-color: rgba(255, 255, 255, 0.03);
+    border-color: rgba(255, 255, 255, 0.15);
 }
 
-.card-header {
+.problem-card-top {
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: flex-start;
+    gap: 1rem;
 }
 
-.card-tags {
+.gym-and-date {
     display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    flex: 1;
+    min-width: 0;
+}
+
+.card-gym {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1.25;
+}
+
+.card-date {
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.4);
+}
+
+.card-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    flex-shrink: 0;
+}
+
+.card-badges {
+    display: flex;
+    align-items: center;
     gap: 0.4rem;
     flex-wrap: wrap;
 }
 
+.card-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-size: 0.8rem;
+    padding-top: 0.2rem;
+}
+
+.tries-badge {
+    color: rgba(255, 255, 255, 0.5);
+    font-weight: 600;
+}
+
+.problem-notes {
+    font-style: italic;
+    color: rgba(255, 255, 255, 0.4);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.session-card-footer {
+    margin-top: 0.25rem;
+    padding-top: 0.65rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+/* Bildknapp */
+.btn-icon {
+    background: transparent;
+    border: 1px solid var(--border-color-card);
+    border-radius: var(--border-radius-sm);
+    color: rgba(255, 255, 255, 0.4);
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    padding: 0;
+}
+
+.btn-icon:hover {
+    border-color: var(--accent-color);
+    color: var(--accent-color);
+    background-color: rgba(74, 222, 128, 0.05);
+}
+
+/* Delete-knapp med matchande kvadratisk form och röd hover */
+.btn-delete {
+    background: transparent;
+    border: 1px solid var(--border-color-card);
+    border-radius: var(--border-radius-sm);
+    color: rgba(255, 255, 255, 0.4);
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    padding: 0;
+    font-size: 1.1rem;
+    line-height: 1;
+}
+
+.btn-delete:hover {
+    border-color: #f87171;
+    color: #f87171;
+    background-color: rgba(248, 113, 113, 0.08);
+}
+
+/* Badges */
 .badge {
     font-size: 0.68rem;
     font-weight: 700;
@@ -379,7 +484,6 @@ h2 {
     background-color: transparent;
 }
 
-/* Dynamic status colors */
 .badge.flash {
     background-color: rgba(168, 85, 247, 0.15);
     color: #c084fc;
@@ -405,52 +509,6 @@ h2 {
     text-decoration: line-through;
 }
 
-.gym-title {
-    font-size: 1.1rem;
-    font-weight: 600;
-    margin-bottom: 0.2rem;
-}
-
-.meta-info {
-    display: flex;
-    align-items: balance;
-    gap: 0.5rem;
-    font-size: 0.85rem;
-    color: rgba(255, 255, 255, 0.5);
-    margin-top: 0.2rem;
-    flex-wrap: wrap;
-}
-
-.meta-info > span:first-child {
-    white-space: nowrap;
-}
-
-.meta-bullet {
-    color: rgba(255, 255, 255, 0.25);
-    font-size: 0.75rem;
-}
-
-.problem-notes {
-    font-style: italic;
-    color: rgba(255, 255, 255, 0.8);
-    word-break: break-word;
-}
-
-.btn-delete {
-    background: transparent;
-    border: none;
-    color: rgba(255, 255, 255, 0.3);
-    font-size: 1.2rem;
-    cursor: pointer;
-    line-height: 0.8;
-    padding: 0.2rem;
-    transition: color 0.2s ease;
-}
-
-.btn-delete:hover {
-    color: #f87171;
-}
-
 /* --- Form Styles --- */
 .climb-form {
     display: flex;
@@ -465,7 +523,7 @@ h2 {
 
 .form-row {
     display: grid;
-    grid-template-columns:1fr;
+    grid-template-columns: 1fr;
     gap: 1rem;
 }
 
@@ -575,7 +633,6 @@ h2 {
     margin: auto;
 }
 
-
 .btn-stepper {
     background-color: rgba(255, 255, 255, 0.03);
     border: 1px solid rgba(255, 255, 255, 0.12);
@@ -679,9 +736,6 @@ h2 {
     box-shadow: 0 6px 20px rgba(74, 222, 128, 0.1);
 }
 
-
-
-/* Bildknapp i formuläret */
 .btn-photo-upload {
     width: 100%;
     height: 42px;
@@ -800,7 +854,7 @@ footer {
 }
 
 footer p {
-   font-family: 'JetBrains Mono', monospace;
+    font-family: 'JetBrains Mono', monospace;
     font-size: 0.75rem;
     color: rgba(255, 255, 255, 0.35);
 }
@@ -826,23 +880,22 @@ footer p {
     overflow-y: auto;
 }
 
-/* Hides meta-bullet at line-break on smaller screens */
+/* Responsivitet / Media Queries */
 @media screen and (max-width: 480px) {
     .meta-bullet {
         display: none;
     }
 }
 
-/* Tablet */
 @media screen and (min-width: 768px) {
     .hero-container, .filter-grid, .dashboard-grid, .user-grid {
         max-width: 720px;
     }
 
     .form-row {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 1rem; 
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem; 
     }
 
     .stats-card {
@@ -861,9 +914,7 @@ footer p {
     }
 }
 
-/* Desktop */
 @media screen and (min-width: 1024px) {
-   
     .hero-container, .filter-grid, .dashboard-grid, .user-grid {
         max-width: 1100px; 
         margin: 0 auto;
@@ -945,7 +996,6 @@ footer p {
         gap: 0.65rem;
     }
 
-    /* Hides session setup container on desktop view */
     #session-setup {
         display: none;
     }
