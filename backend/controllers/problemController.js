@@ -117,7 +117,7 @@ exports.uploadProblemImage = async (req, res) => {
         await s3Client.send(new PutObjectCommand(uploadParams));
 
         // Create public URL
-        const fileUrl = `${process.env.S3_ENDPOINT}/${process.env.S3_BUCKET_NAME}/${filename}`;
+        const fileUrl = `/api/images/${filename}`;
 
         const updateProblem = await problemService.updateProblemImage(id, fileUrl);
 

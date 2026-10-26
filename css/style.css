@@ -290,7 +290,7 @@ h2 {
     overflow: hidden;
     display: flex;
     flex-direction: column;
-    max-height: 600px;
+    max-height: 700px;
     height: auto;
     box-sizing: border-box;
 }
@@ -455,7 +455,7 @@ h2 {
 .climb-form {
     display: flex;
     flex-direction: column;
-    gap: 1.2rem;
+    gap: 1.1rem;
     margin-top: 0;
 }
 
@@ -481,6 +481,7 @@ h2 {
     letter-spacing: 0.8px;
     color: rgba(255, 255, 255, 0.4);
     font-weight: 600;
+    margin-top: 0.25rem;
 }
 
 .form-input, .form-select, .chip-btn {
@@ -676,6 +677,32 @@ h2 {
 .btn-submit:hover {
     opacity: 1;
     box-shadow: 0 6px 20px rgba(74, 222, 128, 0.1);
+}
+
+
+
+/* Bildknapp i formuläret */
+.btn-photo-upload {
+    width: 100%;
+    height: 42px;
+    background-color: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border-color-card);
+    border-radius: var(--border-radius-sm);
+    color: var(--text-primary);
+    font-size: 0.85rem;
+    font-family: inherit;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    transition: all 0.2s ease;
+    margin-bottom: -0.5rem;
+}
+
+.btn-photo-upload:hover {
+    background-color: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.2);
 }
 
 .empty-state {

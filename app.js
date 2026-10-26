@@ -1,3 +1,7 @@
+const baseURL = window.location.hostname.includes('devtunnels.ms')
+    ? 'https://86dx845k-3000.euw.devtunnels.ms/api'  // for local development 
+    : 'http://localhost:3000/api';
+
 const { createApp } = Vue
 
 createApp({
@@ -44,10 +48,15 @@ createApp({
                 status: 'Send',
                 gym: '',
                 date: new Date().toISOString().split('T')[0],
-                notes: ''
+                notes: '',
+                image: null
             },
 
-            problems: []
+            problems: [],
+            // Image modal view
+            showImageModal: false,
+            modalImageUrl: ''
+
         }
     },
     mounted() {
@@ -179,7 +188,7 @@ createApp({
             if (!id) return;
 
             try {
-                const response = await fetch(`http://localhost:3000/api/users/${userId}/sessions`);
+                const response = await fetch(`${baseURL}/users/${userId}/sessions`);
                 if (!response.ok) throw new Error('Could not fetch session history.');
 
                 const data = await response.json();
@@ -207,7 +216,7 @@ createApp({
         async fetchActiveSession() {
             if (this.user.id) {
                 try {
-                    const response = await fetch(`http://localhost:3000/api/users/${this.user.id}/sessions/active`);
+                    const response = await fetch(`${baseURL}/users/${this.user.id}/sessions/active`);
                     if (response.ok) {
                         const data = await response.json();
                         if (data.active) {
@@ -245,7 +254,7 @@ createApp({
 
             if (this.user.id) {
                 try {
-                    const response = await fetch(`http://localhost:3000/api/users/${this.user.id}/sessions`, {
+                    const response = await fetch(`${baseURL}/users/${this.user.id}/sessions`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(payload)
@@ -288,10 +297,12 @@ createApp({
 
             if (this.user.id && isBackendId) {
                 try {
-                    await fetch(`http://localhost:3000/api/users/${this.user.id}/sessions/${this.activeSession.id}/end`, {
+                    await fetch(`${baseURL}/users/${this.user.id}/sessions/${this.activeSession.id}/end`, {
                         method: 'PATCH'
                     });
                     await this.fetchSessionHistory(this.user.id);
+
+                    await this.fetchUserProblems(this.user.id);
                     syncedWithBackend = true;
                 } catch (error) {
                     console.warn('PATCH endSession failed. Ending locally.');
@@ -321,7 +332,7 @@ createApp({
 
             if (userId && !isLocalOnlyId) {
                 try {
-                    const response = await fetch(`http://localhost:3000/api/users/${userId}/sessions/${sessionId}`, {
+                    const response = await fetch(`${baseURL}/users/${userId}/sessions/${sessionId}`, {
                         method: 'DELETE'
                     });
 
@@ -423,10 +434,10 @@ createApp({
         },
         async handleAuth() {
             this.authError = '';
-            const endpoint = this.isRegister ? '/api/auth/register' : '/api/auth/login';
+            const endpoint = this.isRegister ? '/auth/register' : '/auth/login';
 
             try {
-                const response = await fetch(`http://localhost:3000${endpoint}`, {
+                const response = await fetch(`${baseURL}${endpoint}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(this.authForm)
@@ -479,7 +490,7 @@ createApp({
             if (!userId) return;
 
             try {
-                const response = await fetch(`http://localhost:3000/api/users/${userId}/problems`);
+                const response = await fetch(`${baseURL}/users/${userId}/problems`);
                 if (!response.ok) throw new Error('Backed server unavailable');
 
                 const data = await response.json();
@@ -492,7 +503,8 @@ createApp({
                     status: p.current_status,
                     gym: p.gym,
                     date: p.climb_date ? p.climb_date.split('T')[0] : '',
-                    notes: p.notes
+                    notes: p.notes,
+                    image_url: p.image_url || null
                 }));
 
                 // Save in localStorage if it´s choosen by the user
@@ -546,7 +558,6 @@ createApp({
         },
         async logNewProblem() {
             const userId = this.user.id || null;
-
             const targetSessionId = this.activeSession ? this.activeSession.id : this.newProblem.sessionId;
             const currentGym = this.activeSession ? this.activeSession.gym : this.newProblem.gym;
             const currentDate = this.activeSession ? this.activeSession.date : this.newProblem.date;
@@ -556,20 +567,28 @@ createApp({
                 grade: this.newProblem.grade || null,
                 tries: Number(this.newProblem.tries) || 1,
                 current_status: this.newProblem.status || 'Send',
-                notes: this.newProblem.notes || null
+                notes: this.newProblem.notes || null,
+                image_url: this.newProblem.image ? URL.createObjectURL(this.newProblem.image) : null
             };
 
             const isBackendSession = targetSessionId && typeof targetSessionId === 'number' && targetSessionId < 1000000000000;
 
             if (isBackendSession) {
                 try {
-                    const response = await fetch(`http://localhost:3000/api/sessions/${targetSessionId}/problems`, {
+                    const response = await fetch(`${baseURL}/sessions/${targetSessionId}/problems`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(payload)
                     });
 
                     if (response.ok) {
+                        const createProblem = await response.json();
+
+                        // If user included an image in the form, upload it directly
+                        if (this.newProblem.image && createProblem.id) {
+                            await this.uploadProblemImage(targetSessionId, createProblem.id, this.newProblem.image);
+                        }
+
                         await this.fetchUserProblems(userId);
                         this.resetForm();
                         return;
@@ -593,7 +612,8 @@ createApp({
                 status: this.newProblem.status,
                 gym: currentGym,
                 date: currentDate,
-                notes: this.newProblem.notes
+                notes: this.newProblem.notes,
+                image_url: null
             });
 
             if (this.user.saveData) {
@@ -618,13 +638,20 @@ createApp({
 
             if (userId && !isLocalOnlyId) {
                 try {
-                    const response = await fetch(`http://localhost:3000/api/users/${userId}/problems/${id}`, {
+                    const response = await fetch(`${baseURL}/users/${userId}/problems/${id}`, {
                         method: 'PUT',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(payload)
                     });
 
                     if (response.ok) {
+                        // If user choose to include an image in the form
+                        if (this.newProblem.image) {
+                            const targetSessionId = this.newProblem.sessionId || (this.activeSession ? this.activeSession.id : null);
+                            if (targetSessionId) {
+                                await this.uploadProblemImage(targetSessionId, id, this.newProblem.image);
+                            }
+                        }
                         await this.fetchUserProblems(userId);
                         return;
                     }
@@ -636,7 +663,11 @@ createApp({
             // fallback when backend is missing
             const index = this.problems.findIndex(p => p.id === id);
             if (index !== -1) {
-                this.problems[index] = { ...this.newProblem, id };
+                this.problems[index] = {
+                    ...this.newProblem,
+                     id,
+                    image_url: this.newProblem.image ? URL.createObjectURL(this.newProblem.image) : this.problems[index].image_url
+                 };
             }
         },
         resetForm() {
@@ -649,8 +680,14 @@ createApp({
                 status: 'Send',
                 gym: '',
                 date: new Date().toISOString().split('T')[0],
-                notes: ''
+                notes: '',
+                image: null
             };
+
+            if (this.$refs.fileInput) {
+                this.$refs.fileInput.value= '';
+            }
+           
         },
         async markAsReset() {
             if (!this.editingId) return;
@@ -669,7 +706,7 @@ createApp({
 
             if (userId && !isLocalOnlyId) {
                 try {
-                    const response = await fetch(`http://localhost:3000/api/users/${userId}/problems/${id}`, {
+                    const response = await fetch(`${baseURL}/users/${userId}/problems/${id}`, {
                         method: 'DELETE'
                     });
 
@@ -733,6 +770,62 @@ createApp({
             localStorage.removeItem('crux_user');
             localStorage.removeItem(this.getActiveSessionStorageKey());
 
+        },
+        // --- IMAGE UPLOADING ---
+        handleFileSelected(event, sessionId, problemId) {
+            const file = event.target.files[0];
+            if (file) {
+                this.uploadProblemImage(sessionId, problemId, file);
+            }
+        },
+        async uploadProblemImage(sessionId, problemId, fileObject) {
+            const formData = new FormData();
+            formData.append('image', fileObject);
+
+            try {
+                const response = await fetch(`${baseURL}/sessions/${sessionId}/problems/${problemId}/image`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.message || 'Could not upload image.');
+                }
+                console.log('Image uploaded successfully!', data.image_url);
+
+                // Find problem in Vue-array and update the image_url
+                const problem = this.problems.find(p => p.id === problemId);
+                if (problem) {
+                    problem.image_url = data.image_url;
+                }
+            } catch (error) {
+                console.error('Error during image upload: ', error);
+                alert('Could not upload image: '+ error.message);
+            }
+        },
+       openImageModal(imageFile) {
+            if (!imageFile) return;
+
+            if (typeof imageFile === 'object') {
+                this.modalImageUrl = URL.createObjectURL(imageFile);
+            } else if (imageFile.startsWith('/api/images')) {
+                
+                const backendOrigin = window.location.hostname.includes('devtunnels.ms')
+                    ? window.location.origin.replace('-5500', '-3000') 
+                    : 'http://localhost:3000';
+                
+                this.modalImageUrl = `${backendOrigin}${imageFile}`;
+            } else {
+                this.modalImageUrl = imageFile;
+            }
+
+            this.showImageModal = true;
+        },
+        closeImageModal() {
+            this.showImageModal = false;
+            this.modalImageUrl = '';
         }
     }
 }).mount('#app')

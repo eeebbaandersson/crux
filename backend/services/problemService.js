@@ -4,7 +4,7 @@ const db = require('../db.js');
 async function getProblemsByUserId(userId) {
     const { rows } = await db.query(
         `SELECT p.id, p.session_id, p.style, p.grade, p.tries, 
-                p.current_status, p.notes, p.created_at,
+                p.current_status, p.notes, p.created_at, p.image_url,
                 s.gym, s.climb_date
          FROM problems p
          JOIN sessions s ON p.session_id = s.id
